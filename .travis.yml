@@ -1,0 +1,20 @@
+language: python
+cache: pip
+
+python:
+    - "3.6"
+
+install:
+    - pip install jupyter
+
+script:
+    - jupyter nbconvert notebooks/MRNet_exploratory_data_analysis.ipynb --to html
+
+after_success: |
+    if [ -n "$GITHUB_API_KEY" ]; then
+    git checkout --orphan gh-pages
+    git rm -rf --cached .
+    git add -f --ignore-errors README.md notebooks/MRNet_exploratory_data_analysis.html
+    git -c user.name='travis' -c user.email='travis' commit -m init
+    git push -f -q https://$GITHUB_USER:$GITHUB_API_KEY@github.com/$TRAVIS_REPO_SLUG gh-pages
+    fi
