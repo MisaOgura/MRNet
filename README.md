@@ -87,6 +87,8 @@ The diagnosis (`0` for negative, `1` for positive) of each condition for the exa
 
 You can process data as described above in one command.
 
+By default, the script will find out the number of CPUs on the machine and use all the cores to parallelise the data processing. If you wish to modify the number of cores used, change `$num_cpu` to the desired number of CPUs in [scripts/process-image-data.sh](./scripts/process-image-data.sh).
+
 From the root of the project, run:
 
 ```bash
