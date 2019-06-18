@@ -46,7 +46,7 @@ The hidden test set is _not publically available_ and is used for scoring models
 
 The information on preprocessing can be found in the [Methods section](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699#sec008) of the paper.
 
-The MRNet dataset consits of following components.
+The MRNet dataset consists of following components.
 
 ```bash
 data/MRNet-v1.0
@@ -81,13 +81,15 @@ Each series of MRI images is provided as a `<case_number>.npy` file, which conta
 
 ### 3. Merge diagnoses to make labels
 
-The diagnosis (`0` for negative, `1` for positive) of each condition for the examined cases are provided as three separate `csv` files. It would be handy to have all the disgnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
+The diagnosis (`0` for negative, `1` for positive) of each condition for the examined cases are provided as three separate `csv` files. It would be handy to have all the diagnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
 
-### Data processing scripts
+### Data preprocessing pipeline
 
-You can process data as described above in one command.
+I have created a pipeline composed of a series of scripts, so that we can process data in one command.
 
-By default, the script will find out the number of CPUs on the machine and use all the cores to parallelise the data processing. If you wish to modify the number of cores used, change `$num_cpu` to the desired number of CPUs in [scripts/process-image-data.sh](./scripts/process-image-data.sh).
+To see what exactly scripts are doing, check out the [scripts](./scripts) directory in the repo.
+
+By default, the script will find out the number of CPUs on the machine you're running the command from and use _all the cores_ to parallelise the processing. If you wish to modify the number of cores used, change `$num_cpu` to the desired number of CPUs in [scripts/process-image-data.sh](./scripts/process-image-data.sh).
 
 From the root of the project, run:
 
@@ -96,15 +98,25 @@ $ ./scripts/process-data.sh <data_dir> <out_dir>
 
 ...
 ...
-...
+
+# Wait until the processing is completed
+
 Preprocessing finished.
 ```
 
-- `data_dir`: points to the root of the MRNet dataset e.g. `data/MRNet-v1.0`
+The script expects 2 parameters:
 
-- `out_dir`: where the process data should be stored e.g. `data/processed`
+- `<data_dir>`: points to the root of the MRNet dataset e.g. `data/MRNet-v1.0`
 
-The output directory (~8.4G) looks like this:
+- `<out_dir>`: where the process data should be stored e.g. `data/processed`
+
+It takes anywhere from at least a few minutes to > 10mins to process the entire dataset, depending on the number of cores you are using.
+
+So go away, have a break and come back in your own time ☕
+
+Once the processing is finished, you have a **new dataset (~8.4G)** that is created to the `<out_dir>` specified (the original dataset is left _untouched_).
+
+It has the below structure:
 
 ```bash
 data/processed
