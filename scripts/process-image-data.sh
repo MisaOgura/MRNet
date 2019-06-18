@@ -26,8 +26,8 @@ fi
 
 # Parallelise the conversion
 
-awk -F "," 'NR > 1 { print $2 }' $LABELS_CSV                       \
+awk -F "," 'NR > 1 { print $2 }' $LABELS_CSV                               \
   | awk -v data_dir=$DATA_DIR -v out_dir=$OUT_DIR '{
       print "python3 scripts/convert_npy_to_png.py", data_dir, $0, out_dir
-    }'                                                             \
+    }'                                                                     \
   | xargs -P $num_cpu -I {} bash -c "{}"

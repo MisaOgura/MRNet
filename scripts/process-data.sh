@@ -27,13 +27,13 @@ python3 scripts/make_labels.py $DATA_DIR $OUT_DIR
 
 echo "Converting .npy image data to .png files..."
 
-find $OUT_DIR -name "*labels.csv" \
+find $OUT_DIR -name "*labels.csv"                               \
   | awk -F "/" -v data_dir=$DATA_DIR -v out_dir=$OUT_DIR '{
       csv_file=$0;
       dataset=$3; gsub("_labels.csv", "", dataset)
       print data_dir "/" dataset, csv_file, out_dir "/" dataset
-    }' \
-  | awk '{ print "./scripts/process-image-data.sh", $0}' \
+    }'                                                          \
+  | awk '{ print "./scripts/process-image-data.sh", $0}'        \
   | xargs -I {} bash -c "{}"
 
 echo "Preprocessing finished."
