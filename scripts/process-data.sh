@@ -21,7 +21,7 @@ mkdir -p $OUT_DIR
 
 echo "Creating labels from csv files..."
 
-python3 make_labels.py $DATA_DIR $OUT_DIR
+python3 scripts/make_labels.py $DATA_DIR $OUT_DIR
 
 # Process image data
 
@@ -33,7 +33,7 @@ find $OUT_DIR -name "*labels.csv" \
       dataset=$3; gsub("_labels.csv", "", dataset)
       print data_dir "/" dataset, csv_file, out_dir "/" dataset
     }' \
-  | awk '{ print "./process-image-data.sh", $0}' \
+  | awk '{ print "./scripts/process-image-data.sh", $0}' \
   | xargs -I {} bash -c "{}"
 
 echo "Preprocessing finished."

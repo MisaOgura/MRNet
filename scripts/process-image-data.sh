@@ -16,10 +16,18 @@ OUT_DIR=$3
 rm -rf $OUT_DIR
 mkdir -p $OUT_DIR
 
+# Get the number of CPU cores
+
+if (( $(nproc) == 0 )); then
+  num_cpu=$(nproc)
+else
+  num_cpu=$(sysctl -n hw.ncpu)
+fi
+
 # Parallelise the conversion
 
 awk -F "," 'NR > 1 { print $2 }' $LABELS_CSV                       \
   | awk -v data_dir=$DATA_DIR -v out_dir=$OUT_DIR '{
-      print "python3 convert_npy_to_png.py", data_dir, $0, out_dir
+      print "python3 scripts/convert_npy_to_png.py", data_dir, $0, out_dir
     }'                                                             \
-  | xargs -P 4 -I {} bash -c "{}"
+  | xargs -P $num_cpu -I {} bash -c "{}"
