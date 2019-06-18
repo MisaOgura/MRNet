@@ -12,7 +12,7 @@ OUT_DIR=$2
 
 # Make sure the output dir is clean
 
-echo "Cleaning up the output dir '$OUT_DIR'..."
+echo "Cleaning the output directory '$OUT_DIR'..."
 
 rm -rf $OUT_DIR
 mkdir -p $OUT_DIR
@@ -35,3 +35,5 @@ find $OUT_DIR -name "*labels.csv" \
     }' \
   | awk '{ print "./process-image-data.sh", $0}' \
   | xargs -I {} bash -c "{}"
+
+echo "Preprocessing finished."
