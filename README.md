@@ -46,8 +46,6 @@ The hidden test set is _not publically available_ and is used for scoring models
 
 ## Data preprocessing
 
----
-
 The information on preprocessing can be found in the [Methods section](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699#sec008) of the paper.
 
 The MRNet dataset consists of following components.
@@ -143,8 +141,6 @@ data/processed
 ```
 
 ## Training
-
----
 
 The training script only works with Python 3.6 or later.
 
