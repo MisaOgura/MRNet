@@ -13,8 +13,7 @@ class MRNet(nn.Module):
         self.fc = nn.Linear(256, 1)
 
     def forward(self, batch):
-        batch_size = batch.size(0)
-        batch_out = torch.tensor([])
+        batch_out = torch.tensor([]).to(batch.device)
 
         for series in batch:
             out = torch.tensor([]).to(batch.device)
