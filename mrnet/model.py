@@ -17,7 +17,7 @@ class MRNet(nn.Module):
         batch_out = torch.tensor([])
 
         for series in batch:
-            out = torch.tensor([])
+            out = torch.tensor([]).to(batch.device)
             for image in series:
                 out = torch.cat((out, self.features(image.unsqueeze(0))), 0)
 
