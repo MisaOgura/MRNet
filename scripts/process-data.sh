@@ -5,6 +5,7 @@ set -e
 if [ $# -ne 2 ]; then
   echo 'Usage: ./process-data.sh <data_dir> <out_dir>'
   echo 'e.g. ./process-data.sh data/MRNet-v1.0 data/processed'
+  exit 1
 fi
 
 DATA_DIR=$1

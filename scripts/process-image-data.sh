@@ -5,6 +5,7 @@ set -e
 if [ $# -ne 3 ]; then
   echo 'Usage: ./process-image-data.sh <data_dir> <labels.csv> <out_dir>'
   echo 'e.g. ./process-image-data.sh data_dir/train train_labels.csv out_dir/train'
+  exit 1
 fi
 
 DATA_DIR=$1

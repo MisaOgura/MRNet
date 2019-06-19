@@ -27,6 +27,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 4:
         print('Usage: python3 convert_npy_to_png.py <data_dir> <case> <out_dir>')
         print('e.g. python3 convert_npy_to_png.py data/MRNet-v1.0/train 0001 data/processed/train')
+        exit(1)
 
     data_dir = sys.argv[1]
     case = sys.argv[2]

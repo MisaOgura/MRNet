@@ -37,6 +37,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage: python3 make_labels.py <data_dir> <out_dir>')
         print('e.g. python3 make_labels.py data/MRNet-v1.0 data/processed')
+        exit(1)
 
     data_dir = sys.argv[1]
     out_dir = sys.argv[2]
