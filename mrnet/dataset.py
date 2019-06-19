@@ -45,7 +45,7 @@ class MRNetDataset(Dataset):
             image = Image.open(path)
 
             if self.transform is not None:
-                image = self.transform(image).unsqueeze(0)
+                image = self.transform(image).unsqueeze(0).to(self.device)
 
             data = torch.cat((data, image), 0)
 
