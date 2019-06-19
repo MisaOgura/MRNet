@@ -23,7 +23,7 @@ class MRNetDataset(Dataset):
         if self.device is None:
             self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        self.case_paths = sorted(glob(f'{data_dir}/{dataset}/**'))[:100]
+        self.case_paths = sorted(glob(f'{data_dir}/{dataset}/**'))
         self.labels_df = pd.read_csv(f'{data_dir}/{dataset}_labels.csv')[diagnosis]
 
     def __len__(self):
