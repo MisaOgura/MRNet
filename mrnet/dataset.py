@@ -39,7 +39,7 @@ class MRNetDataset(Dataset):
 
         paths = image_paths[from_idx:to_idx]
 
-        data = torch.tensor([]).to(device)
+        data = torch.tensor([]).to(self.device)
 
         for path in paths:
             image = Image.open(path)
@@ -53,7 +53,7 @@ class MRNetDataset(Dataset):
         return (data, label)
 
 
-def make_datasets(data_dir, plane, diagnosis):
+def make_datasets(data_dir, plane, diagnosis, device):
     train_transform = transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
@@ -65,8 +65,8 @@ def make_datasets(data_dir, plane, diagnosis):
         transforms.ToTensor()
     ])
 
-    train_dataset = MRNetDataset(data_dir, 'train', plane, diagnosis, transform=train_transform)
-    valid_dataset = MRNetDataset(data_dir, 'valid', plane, diagnosis, transform=valid_transform)
+    train_dataset = MRNetDataset(data_dir, 'train', plane, diagnosis, transform=train_transform, device=device)
+    valid_dataset = MRNetDataset(data_dir, 'valid', plane, diagnosis, transform=valid_transform, device=device)
 
     return train_dataset, valid_dataset
 
