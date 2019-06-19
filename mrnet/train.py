@@ -68,7 +68,7 @@ def main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay, devic
         train_loss = train_loss/len(train_loader)
         train_losses.append(train_loss)
 
-        valid_loss = valid_loss/len(train_loader)
+        valid_loss = valid_loss/len(valid_loader)
         valid_losses.append(valid_loss)
 
         print(f'Epoch {epoch + 1}/{epochs}: train loss - {train_loss:.3f}, valid loss - {valid_loss:.3f}')
