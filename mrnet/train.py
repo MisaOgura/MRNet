@@ -23,7 +23,8 @@ def main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay, devic
     train_loader, valid_loader = make_data_loaders(data_dir,
                                                    plane,
                                                    diagnosis,
-                                                   batch_size)
+                                                   batch_size,
+                                                   device)
 
     print('Creating a model...')
 
