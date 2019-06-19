@@ -2,6 +2,8 @@
 
 ## Background
 
+---
+
 In the paper [Deep-learning-assisted diagnosis for knee magnetic resonance imaging: Development and retrospective validation of MRNet](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699), the [Stanford ML Group](https://stanfordmlgroup.github.io/) developed an algorithm to predict abnormalities in knee MRI exams, and measured the clinical utility of providing the algorithm’s predictions to radiologists and surgeons during interpretation.
 
 They developed a deep learning model for detecting:
@@ -12,7 +14,7 @@ They developed a deep learning model for detecting:
 
 - **meniscal tears**
 
-## MRNet Dataset description
+### MRNet Dataset description
 
 The **dataset (~5.7G)** was released along with the publication of the paper. You can download it by agreeing to the Research Use Agreement and submitting your details on the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/) page.
 
@@ -43,6 +45,8 @@ The hidden test set is _not publically available_ and is used for scoring models
 - In the paper, an external validation was performed on a [pubclically available data](http://www.riteh.uniri.hr/~istajduh/projects/kneeMRI/).
 
 ## Data preprocessing
+
+---
 
 The information on preprocessing can be found in the [Methods section](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699#sec008) of the paper.
 
@@ -136,4 +140,37 @@ data/processed
 ├── train_labels.csv  # labels for all conditions per case
 ├── valid
 └── valid_labels.csv
+```
+
+## Training
+
+---
+
+The training script only works with Python 3.6 or later.
+
+It is still work in progress - for now, it supports training of a model for binary classification of a condition using images from a plane specified by the user.
+
+`mrnet/train.py` expects below parameters:
+
+- `<data_dir>`: directory where processed data lives
+- `<plane>`: `axial`, `coronal` or `sagittal`
+- `<condition>`: `abnormal`, `acl` or `meniscal`
+- `<epochs>`: number of epochs to train for
+- `<batch_size>`: size of mini-batch
+- `<lr>`: learning rate for `nn.optim.Adam` optimizer
+- `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
+
+To train a model using the preprocessed data, from the project root:
+
+```bash
+$ python/python3 -u mrnet/train.py data/processed axial abnormal 10 32 0.0001 0.01
+
+Parsing arguments...
+Creating data loaders...
+Creating a model...
+Starting the training...
+Epoch 1/10: train loss - 0.690, valid loss - 0.692
+    Validation loss decreased inf --> 0.692.
+Epoch 2/10: train loss - 0.678, valid loss - 0.696
+...
 ```
