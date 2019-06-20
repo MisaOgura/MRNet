@@ -103,65 +103,72 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     print(f'Training a model using {plane} series...')
 
     for epoch, _ in enumerate(range(epochs), 1):
-        train_loss = 0.0
-        valid_loss = 0.0
+        train_abnormal_loss = 0.0
+        train_acl_loss = 0.0
+        train_meniscus_loss = 0.0
+
+        valid_abnormal_loss = 0.0
+        valid_acl_loss = 0.0
+        valid_meniscus_loss = 0.0
 
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            train_abnormal_loss = forward_and_backprop(model_abnormal,
+            batch_abnormal_loss = forward_and_backprop(model_abnormal,
                                                        inputs,
                                                        labels[:,0],
                                                        criterion,
                                                        optimizers[0])
 
-            train_acl_loss = forward_and_backprop(model_acl,
+            batch_acl_loss = forward_and_backprop(model_acl,
                                                   inputs,
                                                   labels[:,1],
                                                   criterion,
                                                   optimizers[1])
 
-            train_meniscus_loss = forward_and_backprop(model_meniscus,
+            batch_meniscus_loss = forward_and_backprop(model_meniscus,
                                                        inputs,
                                                        labels[:,2],
                                                        criterion,
                                                        optimizers[2])
 
-            # TODO - scale losses inversely proportionally to the
-            # prevelence of the corresponding conditions
-
-            loss = calculate_total_loss(train_abnormal_loss,
-                                        train_acl_loss,
-                                        train_meniscus_loss)
-            train_loss += loss
+            train_abnormal_loss += batch_abnormal_loss
+            train_acl_loss += batch_acl_loss
+            train_meniscus_loss += batch_meniscus_loss
 
         for inputs, labels in valid_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            valid_abnormal_loss = forward(model_abnormal, inputs, labels[:,0], criterion)
-            valid_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
-            valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
+            batch_abnormal_loss = forward(model_abnormal, inputs, labels[:,0], criterion)
+            batch_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
+            batch_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
 
-            loss = calculate_total_loss(valid_abnormal_loss,
-                                        valid_acl_loss,
-                                        valid_meniscus_loss)
-            valid_loss += loss
+            valid_abnormal_loss += batch_abnormal_loss
+            valid_acl_loss += batch_acl_loss
+            valid_meniscus_loss += batch_meniscus_loss
 
-        train_loss = train_loss/len(train_loader)
-        train_losses.append(train_loss)
+        train_abnormal_loss = train_abnormal_loss/len(train_loader)
+        train_acl_loss = train_acl_loss/len(train_loader)
+        train_meniscus_loss = train_meniscus_loss/len(train_loader)
 
-        valid_loss = valid_loss/len(valid_loader)
-        valid_losses.append(valid_loss)
+        valid_abnormal_loss = train_abnormal_loss/len(train_loader)
+        valid_acl_loss = train_acl_loss/len(train_loader)
+        valid_meniscus_loss = train_meniscus_loss/len(train_loader)
 
-        print(f'Epoch {epoch}/{epochs} -',
-              f'train loss: {train_loss:.3f}, valid loss: {valid_loss:.3f}')
+        print(f'=== Epoch {epoch}/{epochs} ===',
+              f'\nTrain losses - abnormal: {train_abnormal_loss:.3f},',
+              f'acl: {train_acl_loss:.3f},',
+              f'meniscus: {train_meniscus_loss:.3f}',
+              f'\nValid losses - abnormal: {valid_abnormal_loss:.3f},',
+              f'acl: {valid_acl_loss:.3f},',
+              f'meniscus: {valid_meniscus_loss:.3f}')
 
-        if valid_loss < min_valid_loss:
-            print(f'***Validation loss decreased',
-                  f'{min_valid_loss:.3f} --> {valid_loss:.3f},',
-                  f'model saved to {chkpt_dir}')
-            save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
-            min_valid_loss = valid_loss
+        # if valid_loss < min_valid_loss:
+        #     print(f'***Validation loss decreased',
+        #           f'{min_valid_loss:.3f} --> {valid_loss:.3f},',
+        #           f'model saved to {chkpt_dir}')
+        #     save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
+        #     min_valid_loss = valid_loss
 
 
 if __name__ == '__main__':
