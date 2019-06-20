@@ -58,7 +58,7 @@ def save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir):
         'optimizers': [optimizer.state_dict() for optimizer in optimizers]
     }
 
-    torch.save(checkpoint, f'{chkpt_dir}/mrnet_p-{plane}_e-{epoch}.pt')
+    torch.save(checkpoint, f'{chkpt_dir}/mrnet_p-{plane}_e-{epoch:02d}.pt')
 
 
 def main(data_dir, plane, epochs, lr, weight_decay, device=None):
@@ -95,7 +95,6 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
 
     train_losses = []
     valid_losses = []
-    min_valid_loss = np.inf
 
     print(f'Training a model using {plane} series...')
 
@@ -160,12 +159,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
               f'acl: {valid_acl_loss:.3f},',
               f'meniscus: {valid_meniscus_loss:.3f}')
 
-        # if valid_loss < min_valid_loss:
-        #     print(f'***Validation loss decreased',
-        #           f'{min_valid_loss:.3f} --> {valid_loss:.3f},',
-        #           f'model saved to {chkpt_dir}')
-        #     save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
-        #     min_valid_loss = valid_loss
+        save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
 
 
 if __name__ == '__main__':
