@@ -8,17 +8,17 @@ from torchvision import models
 class MRNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.features = self._create_feature_extractor()
+        self.alexnet = self._create_feature_extractor()
         self.avg_pool = nn.AvgPool2d(kernel_size=7, stride=None, padding=0)
-        self.classifier = nn.Linear(256, 1)
+        self.fc = nn.Linear(256, 1)
 
     @property
     def features(self):
-        return self.features
+        return self.alexnet
 
     @property
     def classifier(self):
-        return self.classifier
+        return self.fc
 
     def forward(self, batch):
         batch_out = torch.tensor([]).to(batch.device)
