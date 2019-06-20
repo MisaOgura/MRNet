@@ -151,9 +151,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
         train_acl_loss = train_acl_loss/len(train_loader)
         train_meniscus_loss = train_meniscus_loss/len(train_loader)
 
-        valid_abnormal_loss = train_abnormal_loss/len(valid_loader)
-        valid_acl_loss = train_acl_loss/len(valid_loader)
-        valid_meniscus_loss = train_meniscus_loss/len(valid_loader)
+        valid_abnormal_loss = valid_abnormal_loss/len(valid_loader)
+        valid_acl_loss = valid_acl_loss/len(valid_loader)
+        valid_meniscus_loss = valid_meniscus_loss/len(valid_loader)
 
         print(f'=== Epoch {epoch}/{epochs} ===',
               f'\nTrain losses - abnormal: {train_abnormal_loss:.3f},',
