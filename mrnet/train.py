@@ -143,4 +143,9 @@ if __name__ == '__main__':
     lr = float(sys.argv[5])
     weight_decay = float(sys.argv[6])
 
-    main(data_dir, plane, epochs, batch_size, lr, weight_decay)
+    try:
+        device = sys.argv[7]
+    except IndexError:
+        device = None
+
+    main(data_dir, plane, epochs, batch_size, lr, weight_decay, device)
