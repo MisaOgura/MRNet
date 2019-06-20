@@ -158,7 +158,7 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
 
         if valid_loss < min_valid_loss:
             print(f'***Validation loss decreased',
-                  f'{min_valid_loss:.3f} --> {valid_loss:.3f}',
+                  f'{min_valid_loss:.3f} --> {valid_loss:.3f},',
                   f'model saved to {chkpt_dir}')
             save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
             min_valid_loss = valid_loss
