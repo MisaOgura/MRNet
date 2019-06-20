@@ -63,7 +63,7 @@ def make_dataset(data_dir, dataset_type, plane, device=None):
     if dataset_type == 'train':
         transform = transforms.Compose([
             transforms.RandomHorizontalFlip(),
-            transforms.RandomAffine(25, translate=(-25, 25)),
+            transforms.RandomAffine(25, translate=(0.1, 0.1)),
             transforms.ToTensor()
         ])
     elif dataset_type == 'valid':

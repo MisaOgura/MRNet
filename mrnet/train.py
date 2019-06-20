@@ -75,38 +75,38 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            loss = forward_and_backprop(model_abnormal,
-                                        inputs,
-                                        labels[:,0],
-                                        criterion,
-                                        optimizers[0])
+            train_abnormal_loss = forward_and_backprop(model_abnormal,
+                                                       inputs,
+                                                       labels[:,0],
+                                                       criterion,
+                                                       optimizers[0])
 
-            # train_acl_loss = forward_and_backprop(model_acl,
-            #                                      inputs,
-            #                                      labels[:,1],
-            #                                      criterion,
-            #                                      optimizers[1])
+            train_acl_loss = forward_and_backprop(model_acl,
+                                                  inputs,
+                                                  labels[:,1],
+                                                  criterion,
+                                                  optimizers[1])
 
-            # train_meniscus_loss = forward_and_backprop(model_meniscus,
-            #                                           inputs,
-            #                                           labels[:,2],
-            #                                           criterion,
-            #                                           optimizers[2])
+            train_meniscus_loss = forward_and_backprop(model_meniscus,
+                                                       inputs,
+                                                       labels[:,2],
+                                                       criterion,
+                                                       optimizers[2])
 
             # TODO - scale losses inversely proportionally to the
             # prevelence of the corresponding conditions
 
-            # loss = train_abnormal_loss + train_acl_loss + train_meniscus_loss
+            loss = train_abnormal_loss + train_acl_loss + train_meniscus_loss
             train_loss += loss
 
         for inputs, labels in valid_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            loss = forward(model_abnormal, inputs, labels[:,0], criterion)
-            # valid_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
-            # valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
+            valid_abnormal_loss = forward(model_abnormal, inputs, labels[:,0], criterion)
+            valid_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
+            valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
 
-            # loss = valid_abnormal_loss + valid_acl_loss + valid_meniscus_loss
+            loss = valid_abnormal_loss + valid_acl_loss + valid_meniscus_loss
             valid_loss += loss
 
         train_loss = train_loss/len(train_loader)
