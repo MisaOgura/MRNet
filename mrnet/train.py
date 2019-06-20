@@ -33,6 +33,16 @@ def forward(model, inputs, labels, criterion):
     return loss.item()
 
 
+def calculate_total_loss(abnormal_loss, acl_loss, meniscus_loss):
+    abnormal_loss = abnormal_loss * (1.0 - 0.806)
+    acl_loss = acl_loss * (1.0 - 0.233)
+    meniscus_loss = meniscus_loss * (1.0 - 0.371)
+
+    loss = abnormal_loss + acl_loss + meniscus_loss
+
+    return loss
+
+
 def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     now = datetime.now()
     now = f'{now:%Y-%m-%d_%H:%M:%S}'
@@ -96,7 +106,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
             # TODO - scale losses inversely proportionally to the
             # prevelence of the corresponding conditions
 
-            loss = train_abnormal_loss + train_acl_loss + train_meniscus_loss
+            loss = calculate_total_loss(train_abnormal_loss,
+                                        train_acl_loss,
+                                        train_meniscus_loss)
             train_loss += loss
 
         for inputs, labels in valid_loader:
@@ -106,7 +118,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
             valid_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
             valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
 
-            loss = valid_abnormal_loss + valid_acl_loss + valid_meniscus_loss
+            loss = calculate_total_loss(valid_abnormal_loss,
+                                        valid_acl_loss,
+                                        valid_meniscus_loss)
             valid_loss += loss
 
         train_loss = train_loss/len(train_loader)
