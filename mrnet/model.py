@@ -8,7 +8,7 @@ from torchvision import models
 class MRNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.alexnet = self._create_feature_extractor()
+        self.alexnet = models.alexnet(pretrained=True).features
         self.fc = nn.Linear(256, 1)
 
         self.avg_pool = nn.AvgPool2d(kernel_size=7, stride=None, padding=0)
@@ -38,22 +38,3 @@ class MRNet(nn.Module):
             batch_out = torch.cat((batch_out, out), 0)
 
         return batch_out
-
-    @staticmethod
-    def _create_feature_extractor():
-        model = models.alexnet(pretrained=True).features
-
-        # Freeze first and second conv layers
-
-        for i, child in enumerate(model.children()):
-            if i < 6:
-                for param in child.parameters():
-                    param.require_grad = False
-
-        return model
-
-
-def yield_unfrozen_params(model):
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            yield param

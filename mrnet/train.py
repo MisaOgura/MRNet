@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from data_loader import make_data_loader
-from model import MRNet, yield_unfrozen_params
+from model import MRNet
 
 
 def forward_and_backprop(model, inputs, labels, criterion, optimizer):
@@ -45,7 +45,7 @@ def calculate_total_loss(abnormal_loss, acl_loss, meniscus_loss):
 
 def make_adam_optimizer(model, lr, weight_decay):
     optim_params = [
-        {'params': yield_unfrozen_params(model.features), 'lr': 1e-5},
+        {'params': model.features.parameters(), 'lr': 1e-5},
         {'params': model.classifier.parameters(), 'lr': lr}
     ]
 
