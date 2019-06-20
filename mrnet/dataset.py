@@ -32,10 +32,11 @@ class MRNetDataset(Dataset):
 
         # Get indecies of middle 15 slices
 
-        mid_idx = len(series) // 2
-        from_idx = mid_idx - self.window
-        to_idx = mid_idx + self.window + 1
-        image_paths = series[from_idx:to_idx]
+        # mid_idx = len(series) // 2
+        # from_idx = mid_idx - self.window
+        # to_idx = mid_idx + self.window + 1
+        # image_paths = series[from_idx:to_idx]
+        image_paths = series
 
         data = torch.tensor([]).to(self.device)
 
