@@ -8,7 +8,7 @@ from torchvision import models
 class MRNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.features = models.alexnet().features
+        self.features = models.alexnet(pretrained=True).features
         self.avg_pool = nn.AvgPool2d(kernel_size=7, stride=None, padding=0)
         self.fc = nn.Linear(256, 1)
 
