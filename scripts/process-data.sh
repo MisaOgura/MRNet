@@ -13,9 +13,13 @@ OUT_DIR=$2
 
 # Make sure the output dir is clean
 
-echo "Cleaning the output directory '$OUT_DIR'..."
+if [ -d "$OUT_DIR" ]; then
+  echo "$OUT_DIR already exists, renaming to $OUT_DIR.bak"
+  mv $OUT_DIR $OUT_DIR.bak
+fi
 
-rm -rf $OUT_DIR
+echo "Creating an output directory '$OUT_DIR'..."
+
 mkdir -p $OUT_DIR
 
 # Make labels
