@@ -40,7 +40,17 @@ class MRNet(nn.Module):
     def _create_feature_extractor():
         model = models.alexnet(pretrained=True).features
 
-        for param in model.parameters():
-            param.requires_grad = False
+        # Freeze first and second conv layers
+
+        for i, child in enumerate(model.children()):
+            if i < 6:
+                for param in child.parameters():
+                    param.require_grad = False
 
         return model
+
+
+def yield_unfrozen_params(model):
+    for name, param in model.named_parameters():
+        if param.requires_grad:
+            yield param

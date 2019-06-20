@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from data_loader import make_data_loader
-from model import MRNet
+from model import MRNet, yield_unfrozen_params
 
 
 def forward_and_backprop(model, inputs, labels, criterion, optimizer):
@@ -43,6 +43,16 @@ def calculate_total_loss(abnormal_loss, acl_loss, meniscus_loss):
     return loss
 
 
+def make_adam_optimizer(model, lr, weight_decay):
+    optim_params = [
+        {'params': yield_unfrozen_params(model.features), 'lr': 1e-5},
+        {'params': model.classifier.parameters(), 'lr': lr}
+    ]
+
+    return optim.Adam(optim_params, lr, weight_decay=weight_decay)
+
+
+
 def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     now = datetime.now()
     now = f'{now:%Y-%m-%d_%H:%M:%S}'
@@ -67,9 +77,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     criterion = nn.BCELoss()
 
     optimizers = [
-        optim.Adam(model_abnormal.classifier.parameters(), lr, weight_decay=weight_decay),
-        optim.Adam(model_acl.classifier.parameters(), lr, weight_decay=weight_decay),
-        optim.Adam(model_meniscus.classifier.parameters(), lr, weight_decay=weight_decay)
+        make_adam_optimizer(model_abnormal, lr, weight_decay),
+        make_adam_optimizer(model_acl, lr, weight_decay),
+        make_adam_optimizer(model_meniscus, lr, weight_decay),
     ]
 
     train_losses = []
