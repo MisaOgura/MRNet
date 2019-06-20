@@ -1,17 +1,14 @@
 import torch
 from torch.utils.data import DataLoader
 
-from dataset import make_datasets
+from dataset import make_dataset
 
 
-def make_data_loaders(data_dir, plane, diagnosis, batch_size, device=None):
+def make_data_loader(data_dir, dataset_type, plane, batch_size, device=None, shuffle=False):
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    train_dataset, valid_dataset = make_datasets(data_dir, plane, diagnosis, device=device)
+    dataset = make_dataset(data_dir, dataset_type, plane, device=device)
+    data_loader = DataLoader(dataset, batch_size, shuffle=shuffle)
 
-
-    train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
-    valid_loader = DataLoader(valid_dataset, batch_size)
-
-    return train_loader, valid_loader
+    return data_loader

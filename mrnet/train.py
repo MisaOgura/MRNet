@@ -7,11 +7,33 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from data_loader import make_data_loaders
+from data_loader import make_data_loader
 from model import MRNet
 
 
-def main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay, device=None):
+def forward_and_backprop(model, inputs, labels, criterion, optimizer):
+    model.train()
+    optimizer.zero_grad()
+
+    out = model(inputs)
+    loss = criterion(out, labels)
+
+    loss.backward()
+    optimizer.step()
+
+    return loss.item()
+
+
+def forward(model, inputs, labels, criterion):
+    model.eval()
+
+    out = model(inputs)
+    loss = criterion(out, labels)
+
+    return loss.item()
+
+
+def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     now = datetime.now()
     now = f'{now:%Y-%m-%d_%H:%M:%S}'
 
@@ -20,17 +42,27 @@ def main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay, devic
 
     print('Creating data loaders...')
 
-    train_loader, valid_loader = make_data_loaders(data_dir,
-                                                   plane,
-                                                   diagnosis,
-                                                   batch_size,
-                                                   device)
+    train_loader = make_data_loader(data_dir, 'train', plane,
+                                    batch_size, device, shuffle=True)
 
-    print('Creating a model...')
+    valid_loader = make_data_loader(data_dir, 'valid', plane,
+                                    batch_size, device)
 
-    model = MRNet().to(device)
-    criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr, weight_decay=weight_decay)
+    print('Creating models...')
+
+    model_abnormal = MRNet().to(device)
+    model_acl = MRNet().to(device)
+    model_meniscus = MRNet().to(device)
+
+    models = [model_abnormal, model_acl, model_meniscus]
+
+    criterions = [nn.BCELoss(), nn.BCELoss(), nn.BCELoss()]
+
+    optimizers = [
+        optim.Adam(model_abnormal.parameters(), lr, weight_decay=weight_decay),
+        optim.Adam(model_acl.parameters(), lr, weight_decay=weight_decay),
+        optim.Adam(model_meniscus.parameters(), lr, weight_decay=weight_decay)
+    ]
 
     train_losses = []
     valid_losses = []
@@ -43,27 +75,41 @@ def main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay, devic
         valid_loss = 0.0
 
         for inputs, labels in train_loader:
-            model.train()
-
             inputs, labels = inputs.to(device), labels.to(device)
 
-            optimizer.zero_grad()
+            train_abnormal_loss =forward_and_backprop(model_abnormal,
+                                                      inputs,
+                                                      labels[:,0],
+                                                      criterions[0],
+                                                      optimizers[0])
 
-            out = model(inputs)
-            loss = criterion(out.unsqueeze(1), labels)
-            loss.backward()
-            optimizer.step()
+            train_acl_loss =forward_and_backprop(model_acl,
+                                                 inputs,
+                                                 labels[:,1],
+                                                 criterions[1],
+                                                 optimizers[1])
 
-            train_loss += loss.item()
+            train_meniscus_loss =forward_and_backprop(model_meniscus,
+                                                      inputs,
+                                                      labels[:,2],
+                                                      criterions[2],
+                                                      optimizers[2])
+
+            # TODO - scale losses inversely proportionally to the
+            # prevelence of the corresponding conditions
+
+            loss = train_abnormal_loss + train_acl_loss + train_meniscus_loss
+            train_loss += loss
 
         for inputs, labels in valid_loader:
-            model.eval()
-
             inputs, labels = inputs.to(device), labels.to(device)
 
-            out = model(inputs)
-            loss = criterion(out.unsqueeze(1), labels)
-            valid_loss += loss.item()
+            valid_abnormal_loss = forward(model_abnormal, inputs, labels[:,0])
+            valid_acl_loss = forward(model_acl, inputs, labels[:,1])
+            valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2])
+
+            loss = valid_abnormal_loss + valid_acl_loss + valid_meniscus_loss
+            valid_loss += loss
 
         train_loss = train_loss/len(train_loader)
         train_losses.append(train_loss)
@@ -94,10 +140,9 @@ if __name__ == '__main__':
     print('Parsing arguments...')
     data_dir = sys.argv[1]
     plane = sys.argv[2]
-    diagnosis = sys.argv[3]
-    epochs = int(sys.argv[4])
-    batch_size = int(sys.argv[5])
-    lr = float(sys.argv[6])
-    weight_decay = float(sys.argv[7])
+    epochs = int(sys.argv[3])
+    batch_size = int(sys.argv[4])
+    lr = float(sys.argv[5])
+    weight_decay = float(sys.argv[6])
 
-    main(data_dir, plane, diagnosis, epochs, batch_size, lr, weight_decay)
+    main(data_dir, plane, epochs, batch_size, lr, weight_decay)
