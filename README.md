@@ -2,7 +2,7 @@
 
 ## TL;DR - Quickstart
 
-1. Download data
+### 1. Download data
     - Request access to the dataset on the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/) page
     - Move to the project root
 
@@ -22,7 +22,7 @@
         $ unzip -qq MRNet-v1.0.zip -d data
         ```
 
-2. Preprocess data
+### 2. Preprocess data
     - Stay at the project root, run:
 
         ```bash
@@ -43,7 +43,7 @@
 
         Preprocessing can take anywhere between 5 ~ 30min, depending on the number of cores available on the machine.
 
-3. Train a model
+### 3. Train a model
 
     You can train an individual MRNet using MRI series from a specific plane.
 
@@ -72,7 +72,7 @@
     ```
 
 
-4. Evaluate a model - WIP
+### 4. Evaluate a model - WIP
 
 ## Background
 
