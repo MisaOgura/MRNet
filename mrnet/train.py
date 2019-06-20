@@ -61,7 +61,7 @@ def save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir):
     torch.save(checkpoint, f'{chkpt_dir}/mrnet_p-{plane}_e-{epoch}.pt')
 
 
-def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
+def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     now = datetime.now()
     now = f'{now:%Y-%m-%d_%H-%M}'
 
@@ -74,11 +74,8 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
 
     print('Creating data loaders...')
 
-    train_loader = make_data_loader(data_dir, 'train', plane,
-                                    batch_size, device, shuffle=True)
-
-    valid_loader = make_data_loader(data_dir, 'valid', plane,
-                                    batch_size, device)
+    train_loader = make_data_loader(data_dir, 'train', plane, device, shuffle=True)
+    valid_loader = make_data_loader(data_dir, 'valid', plane, device)
 
     print('Creating models...')
 
@@ -176,13 +173,12 @@ if __name__ == '__main__':
     data_dir = sys.argv[1]
     plane = sys.argv[2]
     epochs = int(sys.argv[3])
-    batch_size = int(sys.argv[4])
-    lr = float(sys.argv[5])
-    weight_decay = float(sys.argv[6])
+    lr = float(sys.argv[4])
+    weight_decay = float(sys.argv[5])
 
     try:
-        device = sys.argv[7]
+        device = sys.argv[6]
     except IndexError:
         device = None
 
-    main(data_dir, plane, epochs, batch_size, lr, weight_decay, device)
+    main(data_dir, plane, epochs, lr, weight_decay, device)

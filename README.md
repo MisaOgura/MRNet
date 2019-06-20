@@ -52,7 +52,6 @@
     - `<data_dir>`: directory where _processed_ data lives
     - `<plane>`: `axial`, `coronal` or `sagittal`
     - `<epochs>`: number of epochs to train for
-    - `<batch_size>`: size of mini-batch
     - `<lr>`: learning rate for `nn.optim.Adam` optimizer
     - `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
     - `<device>`: `cpu` or `cuda`
@@ -60,7 +59,7 @@
     To train a model using the preprocessed data, from the project root, run:
 
     ```bash
-    $ python/python3 -u mrnet/train.py data/processed axial 10 32 0.0001 0.01 cpu
+    $ python/python3 -u mrnet/train.py data/processed axial 10 0.00001 0.01 cpu
 
     Parsing arguments...
     Creating data loaders...
@@ -208,35 +207,4 @@ data/processed
 ├── train_labels.csv  # labels for all conditions per case
 ├── valid
 └── valid_labels.csv
-```
-
-## Training
-
-The training script only works with Python 3.6 or later.
-
-It is still work in progress - for now, it supports training of a model for binary classification of a condition using images from a plane specified by the user.
-
-`mrnet/train.py` expects below parameters:
-
-- `<data_dir>`: directory where processed data lives
-- `<plane>`: `axial`, `coronal` or `sagittal`
-- `<epochs>`: number of epochs to train for
-- `<batch_size>`: size of mini-batch
-- `<lr>`: learning rate for `nn.optim.Adam` optimizer
-- `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
-- `<device>`: `cpu` or `cuda`
-
-To train a model using the preprocessed data, from the project root:
-
-```bash
-$ python/python3 -u mrnet/train.py data/processed axial abnormal 10 32 0.0001 0.01
-
-Parsing arguments...
-Creating data loaders...
-Creating a model...
-Starting the training...
-Epoch 1/10: train loss - 0.690, valid loss - 0.692
-    Validation loss decreased inf --> 0.692.
-Epoch 2/10: train loss - 0.678, valid loss - 0.696
-...
 ```
