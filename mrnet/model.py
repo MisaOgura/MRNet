@@ -8,9 +8,9 @@ from torchvision import models
 class MRNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.features = models.alexnet(pretrained=True).features
+        self.features = self._create_feature_extractor()
         self.avg_pool = nn.AvgPool2d(kernel_size=7, stride=None, padding=0)
-        self.fc = nn.Linear(256, 1)
+        self.classifier = nn.Linear(256, 1)
 
     def forward(self, batch):
         batch_out = torch.tensor([]).to(batch.device)
@@ -22,8 +22,17 @@ class MRNet(nn.Module):
 
             out = self.avg_pool(out).squeeze()
             out = out.max(dim=0, keepdim=True)[0].squeeze()
-            out = torch.sigmoid(self.fc(out))
+            out = torch.sigmoid(self.classifier(out))
 
             batch_out = torch.cat((batch_out, out), 0)
 
         return batch_out
+
+    @staticmethod
+    def _create_feature_extractor():
+        model = models.alexnet(pretrained=True).features
+
+        for param in model.parameters():
+            param.requires_grad = False
+
+        return model
