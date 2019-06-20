@@ -1,4 +1,78 @@
-# MRNet Competition
+# MRNet
+
+## TL;DR - Quickstart
+
+1. Download data
+    - Request access to the dataset on the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/) page
+    - Move to the project root
+
+        ```bash
+        $ cd path/to/MRNet
+        ```
+
+    - make a `data` directory at the project root
+
+        ```bash
+        $ mkdir data
+        ```
+
+    - Unzip the archive and move to the `data` directory
+
+        ```bash
+        $ unzip -qq MRNet-v1.0.zip -d data
+        ```
+
+2. Preprocess data
+    - Stay at the project root, run:
+
+        ```bash
+        $ ./scripts/process-data.sh <data_dir> <out_dir>
+        ...
+        ...
+        # Wait until the processing is completed
+        Preprocessing finished.
+        ```
+
+        The script expects 2 parameters:
+
+        - `<data_dir>`: Points to the root of the MRNet dataset
+        e.g. `data/MRNet-v1.0`
+
+        - `<out_dir>`: Where the process data should be stored. It will be automatically created if it doesn't exist. If the directory exists, it will rename the old directory to `<out_dir>.bak` and create a fresh directory.
+            e.g. `data/processed`
+
+        Preprocessing can take anywhere between 5 ~ 30min, depending on the number of cores available on the machine.
+
+3. Run training
+    You can train an individual MRNet using MRI series from a specific plane.
+
+    `mrnet/train.py` expects below parameters:
+
+    - `<data_dir>`: directory where _processed_ data lives
+    - `<plane>`: `axial`, `coronal` or `sagittal`
+    - `<epochs>`: number of epochs to train for
+    - `<batch_size>`: size of mini-batch
+    - `<lr>`: learning rate for `nn.optim.Adam` optimizer
+    - `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
+    - `<device>`: `cpu` or `cuda`
+
+    To train a model using the preprocessed data, from the project root, run:
+
+    ```bash
+    $ python/python3 -u mrnet/train.py data/processed axial 10 32 0.0001 0.01 cpu
+
+    Parsing arguments...
+    Creating data loaders...
+    Creating a model...
+    Starting the training...
+    Epoch 1/10: train loss - 0.690, valid loss - 0.692
+        Validation loss decreased inf --> 0.692.
+    Epoch 2/10: train loss - 0.678, valid loss - 0.696
+    ...
+    ```
+
+
+4. Run evaluation - WIP
 
 ## Background
 
@@ -95,12 +169,9 @@ From the root of the project, run:
 
 ```bash
 $ ./scripts/process-data.sh <data_dir> <out_dir>
-
 ...
 ...
-
 # Wait until the processing is completed
-
 Preprocessing finished.
 ```
 
@@ -148,11 +219,11 @@ It is still work in progress - for now, it supports training of a model for bina
 
 - `<data_dir>`: directory where processed data lives
 - `<plane>`: `axial`, `coronal` or `sagittal`
-- `<condition>`: `abnormal`, `acl` or `meniscal`
 - `<epochs>`: number of epochs to train for
 - `<batch_size>`: size of mini-batch
 - `<lr>`: learning rate for `nn.optim.Adam` optimizer
 - `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
+- `<device>`: `cpu` or `cuda`
 
 To train a model using the preprocessed data, from the project root:
 
