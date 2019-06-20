@@ -13,11 +13,11 @@ class MRNet(nn.Module):
         self.classifier = nn.Linear(256, 1)
 
     @property
-    def features():
+    def features(self):
         return self.features
 
     @property
-    def classifier():
+    def classifier(self):
         return self.classifier
 
     def forward(self, batch):
