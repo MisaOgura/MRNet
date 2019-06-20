@@ -56,7 +56,7 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
 
     models = [model_abnormal, model_acl, model_meniscus]
 
-    criterions = [nn.BCELoss(), nn.BCELoss(), nn.BCELoss()]
+    criterion = nn.BCELoss()
 
     optimizers = [
         optim.Adam(model_abnormal.parameters(), lr, weight_decay=weight_decay),
@@ -80,19 +80,19 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
             train_abnormal_loss =forward_and_backprop(model_abnormal,
                                                       inputs,
                                                       labels[:,0],
-                                                      criterions[0],
+                                                      criterion,
                                                       optimizers[0])
 
             train_acl_loss =forward_and_backprop(model_acl,
                                                  inputs,
                                                  labels[:,1],
-                                                 criterions[1],
+                                                 criterion,
                                                  optimizers[1])
 
             train_meniscus_loss =forward_and_backprop(model_meniscus,
                                                       inputs,
                                                       labels[:,2],
-                                                      criterions[2],
+                                                      criterion,
                                                       optimizers[2])
 
             # TODO - scale losses inversely proportionally to the
@@ -104,9 +104,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
         for inputs, labels in valid_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            valid_abnormal_loss = forward(model_abnormal, inputs, labels[:,0])
-            valid_acl_loss = forward(model_acl, inputs, labels[:,1])
-            valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2])
+            valid_abnormal_loss = forward(model_abnormal, inputs, labels[:,0], criterion)
+            valid_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
+            valid_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
 
             loss = valid_abnormal_loss + valid_acl_loss + valid_meniscus_loss
             valid_loss += loss
