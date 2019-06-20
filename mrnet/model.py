@@ -12,6 +12,14 @@ class MRNet(nn.Module):
         self.avg_pool = nn.AvgPool2d(kernel_size=7, stride=None, padding=0)
         self.classifier = nn.Linear(256, 1)
 
+    @property
+    def features():
+        return self.features
+
+    @property
+    def classifier():
+        return self.classifier
+
     def forward(self, batch):
         batch_out = torch.tensor([]).to(batch.device)
 

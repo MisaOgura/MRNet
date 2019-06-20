@@ -67,9 +67,9 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     criterion = nn.BCELoss()
 
     optimizers = [
-        optim.Adam(model_abnormal.parameters(), lr, weight_decay=weight_decay),
-        optim.Adam(model_acl.parameters(), lr, weight_decay=weight_decay),
-        optim.Adam(model_meniscus.parameters(), lr, weight_decay=weight_decay)
+        optim.Adam(model_abnormal.classifier.parameters(), lr, weight_decay=weight_decay),
+        optim.Adam(model_acl.classifier.parameters(), lr, weight_decay=weight_decay),
+        optim.Adam(model_meniscus.classifier.parameters(), lr, weight_decay=weight_decay)
     ]
 
     train_losses = []
