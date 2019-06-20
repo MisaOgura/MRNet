@@ -52,10 +52,22 @@ def make_adam_optimizer(model, lr, weight_decay):
     return optim.Adam(optim_params, lr, weight_decay=weight_decay)
 
 
+def save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir):
+    checkpoint = {
+        'state_dicts': [model.state_dict() for model in models],
+        'optimizers': [optimizer.state_dict() for optimizer in optimizers]
+    }
+
+    torch.save(checkpoint, f'{chkpt_dir}/mrnet_p-{plane}_e-{epoch}.pt')
+
 
 def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     now = datetime.now()
-    now = f'{now:%Y-%m-%d_%H:%M:%S}'
+    now = f'{now:%Y-%m-%d_%H-%M}'
+
+    chkpt_dir = f'./models/{now}'
+    if not os.path.exists(chkpt_dir):
+        os.makedirs(chkpt_dir)
 
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -74,6 +86,8 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     model_acl = MRNet().to(device)
     model_meniscus = MRNet().to(device)
 
+    models = [model_abnormal, model_acl, model_meniscus]
+
     criterion = nn.BCELoss()
 
     optimizers = [
@@ -88,7 +102,7 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
 
     print('Starting the training...')
 
-    for epoch in range(epochs):
+    for epoch, _ in enumerate(range(epochs), 1):
         train_loss = 0.0
         valid_loss = 0.0
 
@@ -139,22 +153,14 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
         valid_loss = valid_loss/len(valid_loader)
         valid_losses.append(valid_loss)
 
-        print(f'Epoch {epoch + 1}/{epochs} - train loss: {train_loss:.3f}, valid loss: {valid_loss:.3f}')
+        print(f'Epoch {epoch}/{epochs} -',
+              f'train loss: {train_loss:.3f}, valid loss: {valid_loss:.3f}')
 
         if valid_loss < min_valid_loss:
-            print(f'\tValidation loss decreased {min_valid_loss:.3f} --> {valid_loss:.3f}.')
-
-            # checkpoint = {
-            #     'epoch': epoch + 1,
-            #     'state_dict': model_abnormal.state_dict(),
-            #     'optimizer': optimizer.state_dict()
-            # }
-
-            # if not os.path.exists('./models'):
-            #     os.mkdir('./models')
-
-            # torch.save(checkpoint, f'./models/mrnet_{now}.pt')
-
+            print(f'***Validation loss decreased',
+                  f'{min_valid_loss:.3f} --> {valid_loss:.3f}',
+                  f'model saved to {chkpt_dir}')
+            save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
             min_valid_loss = valid_loss
 
 
