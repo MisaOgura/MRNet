@@ -43,7 +43,8 @@
 
         Preprocessing can take anywhere between 5 ~ 30min, depending on the number of cores available on the machine.
 
-3. Run training
+3. Train a model
+
     You can train an individual MRNet using MRI series from a specific plane.
 
     `mrnet/train.py` expects below parameters:
@@ -72,7 +73,7 @@
     ```
 
 
-4. Run evaluation - WIP
+4. Evaluate a model - WIP
 
 ## Background
 
