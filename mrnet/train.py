@@ -100,7 +100,7 @@ def main(data_dir, plane, epochs, batch_size, lr, weight_decay, device=None):
     valid_losses = []
     min_valid_loss = np.inf
 
-    print('Starting the training...')
+    print(f'Training a model using {plane} series...')
 
     for epoch, _ in enumerate(range(epochs), 1):
         train_loss = 0.0
