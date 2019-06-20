@@ -27,8 +27,8 @@ def main(data_dir, out_dir):
     valid_df = pd.merge(valid_abnormal_df, valid_acl_df, on='case') \
                  .merge(valid_meniscus_df, on='case')
 
-    train_df.to_csv(f'{out_dir}/train_labels.csv')
-    valid_df.to_csv(f'{out_dir}/valid_labels.csv')
+    train_df.to_csv(f'{out_dir}/train_labels.csv', index=False)
+    valid_df.to_csv(f'{out_dir}/valid_labels.csv', index=False)
 
     print(f"Created 'train_labels.csv' and 'valid_labels.csv' in {out_dir}")
 
