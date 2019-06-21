@@ -6,9 +6,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from data_loader import make_data_loader
-from model import MRNet
-from utils import create_output_dir, print_losses, save_losses, save_checkpoint
+from mrnet.data_loader import make_data_loader
+from mrnet.model import MRNet
+from mrnet.utils import create_output_dir, print_losses, save_losses, save_checkpoint
 
 
 def make_adam_optimizer(model, lr, weight_decay):
@@ -83,7 +83,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     diagnoses = ['abnormal', 'acl', 'meniscus']
 
     exp = f'{datetime.now():%Y-%m-%d_%H-%M}'
-    out_dir, losses_path = create_output_dir(exp)
+    out_dir, losses_path = create_output_dir(exp, plane)
 
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'

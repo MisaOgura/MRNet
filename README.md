@@ -61,6 +61,8 @@
     To train a model using the preprocessed data, from the project root, run:
 
     ```bash
+    $ $ export PYTHONPATH=$PYTHONPATH:`pwd`
+
     $ python/python3 -u mrnet/train.py data/processed axial 10 0.00001 0.01 cpu
 
     Parsing arguments...
