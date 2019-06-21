@@ -32,44 +32,39 @@ def make_lr_scheduler(optimizer,
                                                 verbose=verbose)
 
 
-def forward_backprop(model, inputs, label, criterion, optimizer):
-    model.train()
-    optimizer.zero_grad()
-
-    out = model(inputs)
-    loss = criterion(out, label)
-    loss.backward()
-    optimizer.step()
-
-    return loss.item()
-
-
 def batch_forward_backprop(models, inputs, labels, criterion, optimizers):
+    prevalences = [0.806, 0.233, 0.371]
     losses = []
 
-    for i, (model, optimizer) in enumerate(zip(models, optimizers)):
-        loss = forward_backprop(model, inputs, labels[:,i],
-                                criterion, optimizer)
-        losses.append(loss)
+    for i, (model, label, prevalence, optimizer) in \
+            enumerate(zip(models, labels[0], prevalences, optimizers)):
+        model.train()
+        optimizer.zero_grad()
+
+        out = model(inputs)
+
+        loss = criterion(out, label.unsqueeze(0))
+        # loss.mul_(1 - prevalence)
+        loss.backward()
+
+        optimizer.step()
+        losses.append(loss.item())
 
     return np.array(losses)
 
 
-def forward(model, inputs, label, criterion):
-    model.eval()
-
-    out = model(inputs)
-    loss = criterion(out, label)
-
-    return loss.item()
-
-
 def batch_forward(models, inputs, labels, criterion):
+    prevalences = [0.806, 0.233, 0.371]
     losses = []
 
-    for i, (model) in enumerate(models):
-        loss = forward(model, inputs, labels[:,i], criterion)
-        losses.append(loss)
+    for i, (model, label, prevalence) in \
+            enumerate(zip(models, labels[0], prevalences)):
+        model.eval()
+
+        out = model(inputs)
+        loss = criterion(out, label.unsqueeze(0))
+        # loss.mul_(1 - prevalence)
+        losses.append(loss.item())
 
     return np.array(losses)
 
