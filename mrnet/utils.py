@@ -49,8 +49,8 @@ def save_checkpoint(epoch, plane, diagnosis, model, optimizer, out_dir):
         'epoch': epoch,
         'plane': plane,
         'diagnosis': diagnosis,
-        'state_dicts': model.state_dict(),
-        'optimizers': optimizer.state_dict()
+        'state_dict': model.state_dict(),
+        'optimizer': optimizer.state_dict()
     }
 
     chkpt = f'mrnet_p-{plane}_d-{diagnosis}_e-{epoch:02d}.pt'
