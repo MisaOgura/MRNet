@@ -4,6 +4,8 @@ import csv
 import numpy as np
 import torch
 
+from sklearn import metrics
+
 
 def create_output_dir(exp, plane):
     out_dir = f'./models/{exp}'
@@ -27,13 +29,33 @@ def create_losses_csv(out_dir, plane):
     return losses_path
 
 
-def print_losses(batch_train_losses, batch_valid_losses):
+def calculate_aucs(all_labels, all_preds):
+    all_labels = np.array(all_labels).transpose()
+    all_preds =  np.array(all_preds).transpose()
+
+    aucs = []
+
+    for (labels, preds) in zip(all_labels, all_preds):
+        fpr, tpr, _ = metrics.roc_curve(labels, preds)
+        auc = metrics.auc(fpr, tpr)
+        aucs.append(auc)
+
+    return aucs
+
+
+def print_stats(batch_train_losses, batch_valid_losses,
+                valid_labels, valid_preds):
+    aucs = calculate_aucs(valid_labels, valid_preds)
+
     print(f'Train losses - abnormal: {batch_train_losses[0]:.3f},',
           f'acl: {batch_train_losses[1]:.3f},',
           f'meniscus: {batch_train_losses[2]:.3f}',
           f'\nValid losses - abnormal: {batch_valid_losses[0]:.3f},',
           f'acl: {batch_valid_losses[1]:.3f},',
-          f'meniscus: {batch_valid_losses[2]:.3f}')
+          f'meniscus: {batch_valid_losses[2]:.3f}',
+          f'\nValid AUCs - abnormal: {aucs[0]:.3f},',
+          f'acl: {aucs[1]:.3f},',
+          f'meniscus: {aucs[2]:.3f}')
 
 
 def save_losses(train_losses , valid_losses, losses_path):

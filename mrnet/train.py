@@ -8,7 +8,10 @@ import torch.optim as optim
 
 from mrnet.data_loader import make_data_loader
 from mrnet.model import MRNet
-from mrnet.utils import create_output_dir, print_losses, save_losses, save_checkpoint
+from mrnet.utils import create_output_dir, \
+                        print_stats,       \
+                        save_losses,       \
+                        save_checkpoint    \
 
 
 def make_adam_optimizer(model, lr, weight_decay):
@@ -55,6 +58,7 @@ def batch_forward_backprop(models, inputs, labels, criterion, optimizers):
 
 def batch_forward(models, inputs, labels, criterion):
     prevalences = [0.806, 0.233, 0.371]
+    preds = []
     losses = []
 
     for i, (model, label, prevalence) in \
@@ -62,11 +66,13 @@ def batch_forward(models, inputs, labels, criterion):
         model.eval()
 
         out = model(inputs)
+        preds.append(out.item())
+
         loss = criterion(out, label.unsqueeze(0))
         loss.mul_(1 - prevalence)
         losses.append(loss.item())
 
-    return np.array(losses)
+    return np.array(preds), np.array(losses)
 
 
 def update_lr_schedulers(lr_schedulers, batch_valid_losses):
@@ -121,16 +127,24 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
                                                 criterion, optimizers)
             batch_train_losses += batch_loss
 
+        valid_preds = []
+        valid_labels = []
+
         for inputs, labels in valid_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            batch_loss = batch_forward(models, inputs, labels, criterion)
+            batch_preds, batch_loss = \
+                batch_forward(models, inputs, labels, criterion)
             batch_valid_losses += batch_loss
+
+            valid_labels.append(labels.detach().cpu().numpy().squeeze())
+            valid_preds.append(batch_preds)
 
         batch_train_losses /= len(train_loader)
         batch_valid_losses /= len(valid_loader)
 
-        print_losses(batch_train_losses, batch_valid_losses)
+        print_stats(batch_train_losses, batch_valid_losses,
+                    valid_labels, valid_preds)
         save_losses(batch_train_losses, batch_valid_losses, losses_path)
 
         update_lr_schedulers(lr_schedulers, batch_valid_losses)
