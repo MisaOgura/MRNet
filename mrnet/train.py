@@ -11,26 +11,46 @@ from data_loader import make_data_loader
 from model import MRNet
 
 
-def forward_and_backprop(model, inputs, labels, criterion, optimizer):
+def forward_backprop(model, inputs, label, criterion, optimizer):
     model.train()
     optimizer.zero_grad()
 
     out = model(inputs)
-    loss = criterion(out, labels)
-
+    loss = criterion(out, label)
     loss.backward()
     optimizer.step()
 
     return loss.item()
 
 
-def forward(model, inputs, labels, criterion):
+def batch_forward_backprop(models, inputs, labels, criterion, optimizers):
+    losses = []
+
+    for i, (model, optimizer) in enumerate(zip(models, optimizers)):
+        loss = forward_backprop(model, inputs, labels[:,i],
+                                criterion, optimizer)
+        losses.append(loss)
+
+    return np.array(losses)
+
+
+def forward(model, inputs, label, criterion):
     model.eval()
 
     out = model(inputs)
-    loss = criterion(out, labels)
+    loss = criterion(out, label)
 
     return loss.item()
+
+
+def batch_forward(models, inputs, labels, criterion):
+    losses = []
+
+    for i, (model) in enumerate(models):
+        loss = forward(model, inputs, labels[:,i], criterion)
+        losses.append(loss)
+
+    return np.array(losses)
 
 
 def calculate_total_loss(abnormal_loss, acl_loss, meniscus_loss):
@@ -52,16 +72,32 @@ def make_adam_optimizer(model, lr, weight_decay):
     return optim.Adam(optim_params, lr, weight_decay=weight_decay)
 
 
-def save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir):
+def print_losses(batch_train_losses, batch_valid_losses):
+    print(f'Train losses - abnormal: {batch_train_losses[0]:.3f},',
+          f'acl: {batch_train_losses[1]:.3f},',
+          f'meniscus: {batch_train_losses[2]:.3f}',
+          f'\nValid losses - abnormal: {batch_valid_losses[0]:.3f},',
+          f'acl: {batch_valid_losses[1]:.3f},',
+          f'meniscus: {batch_valid_losses[2]:.3f}')
+
+
+def save_checkpoint(epoch, plane, diagnosis, model, optimizer, now, chkpt_dir):
+    print(f'Min valid loss detected for {diagnosis},',
+          f'saving the model in {chkpt_dir}/...')
+
     checkpoint = {
-        'state_dicts': [model.state_dict() for model in models],
-        'optimizers': [optimizer.state_dict() for optimizer in optimizers]
+        'state_dicts': model.state_dict(),
+        'optimizers': optimizer.state_dict()
     }
 
-    torch.save(checkpoint, f'{chkpt_dir}/mrnet_p-{plane}_e-{epoch:02d}.pt')
+    chkpt = f'mrnet_p-{plane}_d-{diagnosis}_e-{epoch:02d}.pt'
+
+    torch.save(checkpoint, f'{chkpt_dir}/{chkpt}')
 
 
 def main(data_dir, plane, epochs, lr, weight_decay, device=None):
+    diagnoses = ['abnormal', 'acl', 'meniscus']
+
     now = datetime.now()
     now = f'{now:%Y-%m-%d_%H-%M}'
 
@@ -82,84 +118,54 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     model_abnormal = MRNet().to(device)
     model_acl = MRNet().to(device)
     model_meniscus = MRNet().to(device)
-
     models = [model_abnormal, model_acl, model_meniscus]
 
     criterion = nn.BCELoss()
 
-    optimizers = [
-        make_adam_optimizer(model_abnormal, lr, weight_decay),
-        make_adam_optimizer(model_acl, lr, weight_decay),
-        make_adam_optimizer(model_meniscus, lr, weight_decay),
-    ]
+    optimizers = [make_adam_optimizer(model_abnormal, lr, weight_decay),
+                  make_adam_optimizer(model_acl, lr, weight_decay),
+                  make_adam_optimizer(model_meniscus, lr, weight_decay)]
 
     train_losses = []
     valid_losses = []
+    min_valid_losses = [np.inf, np.inf, np.inf]
 
     print(f'Training a model using {plane} series...')
 
     for epoch, _ in enumerate(range(epochs), 1):
-        train_abnormal_loss = 0.0
-        train_acl_loss = 0.0
-        train_meniscus_loss = 0.0
-
-        valid_abnormal_loss = 0.0
-        valid_acl_loss = 0.0
-        valid_meniscus_loss = 0.0
+        batch_train_losses = np.array([0.0, 0.0, 0.0])
+        batch_valid_losses = np.array([0.0, 0.0, 0.0])
 
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            batch_abnormal_loss = forward_and_backprop(model_abnormal,
-                                                       inputs,
-                                                       labels[:,0],
-                                                       criterion,
-                                                       optimizers[0])
-
-            batch_acl_loss = forward_and_backprop(model_acl,
-                                                  inputs,
-                                                  labels[:,1],
-                                                  criterion,
-                                                  optimizers[1])
-
-            batch_meniscus_loss = forward_and_backprop(model_meniscus,
-                                                       inputs,
-                                                       labels[:,2],
-                                                       criterion,
-                                                       optimizers[2])
-
-            train_abnormal_loss += batch_abnormal_loss
-            train_acl_loss += batch_acl_loss
-            train_meniscus_loss += batch_meniscus_loss
+            batch_loss = batch_forward_backprop(models, inputs, labels,
+                                                criterion, optimizers)
+            batch_train_losses += batch_loss
 
         for inputs, labels in valid_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            batch_abnormal_loss = forward(model_abnormal, inputs, labels[:,0], criterion)
-            batch_acl_loss = forward(model_acl, inputs, labels[:,1], criterion)
-            batch_meniscus_loss = forward(model_meniscus, inputs, labels[:,2], criterion)
+            batch_loss = batch_forward(models, inputs, labels, criterion)
+            batch_valid_losses += batch_loss
 
-            valid_abnormal_loss += batch_abnormal_loss
-            valid_acl_loss += batch_acl_loss
-            valid_meniscus_loss += batch_meniscus_loss
+        batch_train_losses /= len(train_loader)
+        batch_valid_losses /= len(valid_loader)
 
-        train_abnormal_loss = train_abnormal_loss/len(train_loader)
-        train_acl_loss = train_acl_loss/len(train_loader)
-        train_meniscus_loss = train_meniscus_loss/len(train_loader)
+        train_losses.append(batch_train_losses)
+        valid_losses.append(batch_valid_losses)
 
-        valid_abnormal_loss = valid_abnormal_loss/len(valid_loader)
-        valid_acl_loss = valid_acl_loss/len(valid_loader)
-        valid_meniscus_loss = valid_meniscus_loss/len(valid_loader)
+        print(f'=== Epoch {epoch}/{epochs} ===')
+        print_losses(batch_train_losses, batch_valid_losses)
 
-        print(f'=== Epoch {epoch}/{epochs} ===',
-              f'\nTrain losses - abnormal: {train_abnormal_loss:.3f},',
-              f'acl: {train_acl_loss:.3f},',
-              f'meniscus: {train_meniscus_loss:.3f}',
-              f'\nValid losses - abnormal: {valid_abnormal_loss:.3f},',
-              f'acl: {valid_acl_loss:.3f},',
-              f'meniscus: {valid_meniscus_loss:.3f}')
+        for i, (batch_v_loss, min_v_loss) in \
+                enumerate(zip(batch_valid_losses, min_valid_losses)):
 
-        save_checkpoint(epoch, models, optimizers, plane, now, chkpt_dir)
+            if batch_v_loss < min_v_loss:
+                save_checkpoint(epoch, plane, diagnoses[i], models[i],
+                                optimizers[i], now, chkpt_dir)
+
+                min_valid_losses[i] = batch_v_loss
 
 
 if __name__ == '__main__':
