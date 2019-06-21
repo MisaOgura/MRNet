@@ -1,4 +1,3 @@
-import os
 import sys
 import numpy as np
 from datetime import datetime
@@ -9,6 +8,28 @@ import torch.optim as optim
 
 from data_loader import make_data_loader
 from model import MRNet
+from utils import create_output_dir, print_losses, save_losses, save_checkpoint
+
+
+def make_adam_optimizer(model, lr, weight_decay):
+    optim_params = [
+        {'params': model.features.parameters(), 'lr': 1e-5},
+        {'params': model.classifier.parameters(), 'lr': lr}
+    ]
+
+    return optim.Adam(optim_params, lr, weight_decay=weight_decay)
+
+
+def make_lr_scheduler(optimizer,
+                      mode='min',
+                      factor=0.3,
+                      patience=1,
+                      verbose=False):
+    return optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                mode=mode,
+                                                factor=factor,
+                                                patience=patience,
+                                                verbose=verbose)
 
 
 def forward_backprop(model, inputs, label, criterion, optimizer):
@@ -53,57 +74,16 @@ def batch_forward(models, inputs, labels, criterion):
     return np.array(losses)
 
 
-def calculate_total_loss(abnormal_loss, acl_loss, meniscus_loss):
-    abnormal_loss = abnormal_loss * (1.0 - 0.806)
-    acl_loss = acl_loss * (1.0 - 0.233)
-    meniscus_loss = meniscus_loss * (1.0 - 0.371)
-
-    loss = abnormal_loss + acl_loss + meniscus_loss
-
-    return loss
-
-
-def make_adam_optimizer(model, lr, weight_decay):
-    optim_params = [
-        {'params': model.features.parameters(), 'lr': 1e-5},
-        {'params': model.classifier.parameters(), 'lr': lr}
-    ]
-
-    return optim.Adam(optim_params, lr, weight_decay=weight_decay)
-
-
-def print_losses(batch_train_losses, batch_valid_losses):
-    print(f'Train losses - abnormal: {batch_train_losses[0]:.3f},',
-          f'acl: {batch_train_losses[1]:.3f},',
-          f'meniscus: {batch_train_losses[2]:.3f}',
-          f'\nValid losses - abnormal: {batch_valid_losses[0]:.3f},',
-          f'acl: {batch_valid_losses[1]:.3f},',
-          f'meniscus: {batch_valid_losses[2]:.3f}')
-
-
-def save_checkpoint(epoch, plane, diagnosis, model, optimizer, now, chkpt_dir):
-    print(f'Min valid loss detected for {diagnosis},',
-          f'saving the model in {chkpt_dir}/...')
-
-    checkpoint = {
-        'state_dicts': model.state_dict(),
-        'optimizers': optimizer.state_dict()
-    }
-
-    chkpt = f'mrnet_p-{plane}_d-{diagnosis}_e-{epoch:02d}.pt'
-
-    torch.save(checkpoint, f'{chkpt_dir}/{chkpt}')
+def update_lr_schedulers(lr_schedulers, batch_valid_losses):
+    for scheduler, v_loss in zip(lr_schedulers, batch_valid_losses):
+        scheduler.step(v_loss)
 
 
 def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     diagnoses = ['abnormal', 'acl', 'meniscus']
 
-    now = datetime.now()
-    now = f'{now:%Y-%m-%d_%H-%M}'
-
-    chkpt_dir = f'./models/{now}'
-    if not os.path.exists(chkpt_dir):
-        os.makedirs(chkpt_dir)
+    exp = f'{datetime.now():%Y-%m-%d_%H-%M}'
+    out_dir, losses_path = create_output_dir(exp)
 
     if device is None:
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -113,7 +93,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     train_loader = make_data_loader(data_dir, 'train', plane, device, shuffle=True)
     valid_loader = make_data_loader(data_dir, 'valid', plane, device)
 
-    print('Creating models...')
+    print(f'Creating models...')
 
     model_abnormal = MRNet().to(device)
     model_acl = MRNet().to(device)
@@ -126,13 +106,16 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
                   make_adam_optimizer(model_acl, lr, weight_decay),
                   make_adam_optimizer(model_meniscus, lr, weight_decay)]
 
-    train_losses = []
-    valid_losses = []
+    lr_schedulers = [make_lr_scheduler(optimizer) for optimizer in optimizers]
+
     min_valid_losses = [np.inf, np.inf, np.inf]
 
     print(f'Training a model using {plane} series...')
+    print(f'Checkpoints and losses will be save to {out_dir}')
 
     for epoch, _ in enumerate(range(epochs), 1):
+        print(f'=== Epoch {epoch}/{epochs} ===')
+
         batch_train_losses = np.array([0.0, 0.0, 0.0])
         batch_valid_losses = np.array([0.0, 0.0, 0.0])
 
@@ -152,18 +135,17 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
         batch_train_losses /= len(train_loader)
         batch_valid_losses /= len(valid_loader)
 
-        train_losses.append(batch_train_losses)
-        valid_losses.append(batch_valid_losses)
-
-        print(f'=== Epoch {epoch}/{epochs} ===')
         print_losses(batch_train_losses, batch_valid_losses)
+        save_losses(batch_train_losses, batch_valid_losses, losses_path)
+
+        update_lr_schedulers(lr_schedulers, batch_valid_losses)
 
         for i, (batch_v_loss, min_v_loss) in \
                 enumerate(zip(batch_valid_losses, min_valid_losses)):
 
             if batch_v_loss < min_v_loss:
                 save_checkpoint(epoch, plane, diagnoses[i], models[i],
-                                optimizers[i], now, chkpt_dir)
+                                optimizers[i], out_dir)
 
                 min_valid_losses[i] = batch_v_loss
 
