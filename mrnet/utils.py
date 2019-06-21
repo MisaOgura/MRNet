@@ -33,12 +33,8 @@ def calculate_aucs(all_labels, all_preds):
     all_labels = np.array(all_labels).transpose()
     all_preds =  np.array(all_preds).transpose()
 
-    aucs = []
-
-    for (labels, preds) in zip(all_labels, all_preds):
-        fpr, tpr, _ = metrics.roc_curve(labels, preds)
-        auc = metrics.auc(fpr, tpr)
-        aucs.append(auc)
+    aucs = [metrics.roc_auc_score(labels, preds) for \
+            labels, preds in zip(all_labels, all_preds)]
 
     return aucs
 

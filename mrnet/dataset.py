@@ -25,7 +25,9 @@ class MRNetDataset(Dataset):
 
     def __getitem__(self, idx):
         case_path = self.case_paths[idx]
+        case = int(case_path.split('/')[-1])
         image_paths = sorted(glob(f'{case_path}/{self.plane}/*.png'))
+
         data = torch.tensor([]).to(self.device)
 
         for path in image_paths:
@@ -34,7 +36,8 @@ class MRNetDataset(Dataset):
                 image = self.transform(image).unsqueeze(0).to(self.device)
             data = torch.cat((data, image), 0)
 
-        diagnoses = self.labels_df.iloc[idx].values[1:].astype(np.float32)
+        case_row = self.labels_df[self.labels_df.case == case]
+        diagnoses = case_row.values[0,1:].astype(np.float32)
         label = torch.tensor(diagnoses)
 
         return (data, label)
