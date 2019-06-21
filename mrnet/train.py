@@ -44,7 +44,7 @@ def batch_forward_backprop(models, inputs, labels, criterion, optimizers):
         out = model(inputs)
 
         loss = criterion(out, label.unsqueeze(0))
-        # loss.mul_(1 - prevalence)
+        loss.mul_(1 - prevalence)
         loss.backward()
 
         optimizer.step()
@@ -63,7 +63,7 @@ def batch_forward(models, inputs, labels, criterion):
 
         out = model(inputs)
         loss = criterion(out, label.unsqueeze(0))
-        # loss.mul_(1 - prevalence)
+        loss.mul_(1 - prevalence)
         losses.append(loss.item())
 
     return np.array(losses)
