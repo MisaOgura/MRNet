@@ -9,8 +9,8 @@ import numpy as np
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.externals import joblib
 
-from mrnet.model import MRNet
-from mrnet.data_loader import make_data_loader
+from model import MRNet
+from data_loader import make_data_loader
 
 
 def main(data_dir, models_dir):
@@ -36,9 +36,6 @@ def main(data_dir, models_dir):
         models.append(models_per_condition)
 
     print(f'Creating data loaders...')
-
-    # data_loaders = [make_data_loader(data_dir, 'train', plane) \
-    #                 for plane in planes]
 
     axial_loader = make_data_loader(data_dir, 'train', 'axial')
     coronal_loader = make_data_loader(data_dir, 'train', 'coronal')

@@ -6,12 +6,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from mrnet.data_loader import make_data_loader
-from mrnet.model import MRNet
-from mrnet.utils import create_output_dir, \
-                        print_stats,       \
-                        save_losses,       \
-                        save_checkpoint    \
+from data_loader import make_data_loader
+from model import MRNet
+from utils import create_output_dir, \
+                  print_stats,       \
+                  save_losses,       \
+                  save_checkpoint
 
 
 def make_adam_optimizer(model, lr, weight_decay):

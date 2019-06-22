@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 
-from mrnet.dataset import make_dataset
+from dataset import make_dataset
 
 
 def make_data_loader(data_dir, dataset_type, plane, device=None, shuffle=False):
