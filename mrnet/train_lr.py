@@ -25,7 +25,8 @@ def main(data_dir, models_dir):
     for condition in conditions:
         models_per_condition = []
         for plane in planes:
-            checkpoint_path = glob(f'{models_dir}/*{plane}*{condition}*.pt')[0]
+            checkpoint_pattern = glob(f'{models_dir}/*{plane}*{condition}*.pt')
+            checkpoint_path = sorted(checkpoint_pattern)[-1]
             checkpoint = torch.load(checkpoint_path, map_location=device)
 
             model = MRNet().to(device)
