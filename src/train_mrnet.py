@@ -15,7 +15,7 @@ from utils import create_output_dir, \
                   save_checkpoint
 
 
-def calculate_weights(data_dir, dataset_type, plane, device):
+def calculate_weights(data_dir, dataset_type, device):
     diagnoses = ['abnormal', 'acl', 'meniscus']
 
     labels_path = f'{data_dir}/{dataset_type}_labels.csv'
@@ -24,7 +24,7 @@ def calculate_weights(data_dir, dataset_type, plane, device):
     weights = []
 
     for diagnosis in diagnoses:
-        pos_count, neg_count = labels_df[diagnosis].value_counts()
+        neg_count, pos_count = labels_df[diagnosis].value_counts().sort_index()
         weight = torch.tensor([neg_count / pos_count])
         weight = weight.to(device)
         weights.append(weight)
@@ -33,12 +33,7 @@ def calculate_weights(data_dir, dataset_type, plane, device):
 
 
 def make_adam_optimizer(model, lr, weight_decay):
-    optim_params = [
-        {'params': model.features.parameters(), 'lr': 1e-5},
-        {'params': model.classifier.parameters(), 'lr': lr}
-    ]
-
-    return optim.Adam(optim_params, lr, weight_decay=weight_decay)
+    return optim.Adam(model.parameters(), lr, weight_decay=weight_decay)
 
 
 def make_lr_scheduler(optimizer,
@@ -108,25 +103,20 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
 
     print(f'Creating models...')
 
-    model_abnormal = MRNet().to(device)
-    model_acl = MRNet().to(device)
-    model_meniscus = MRNet().to(device)
-    models = [model_abnormal, model_acl, model_meniscus]
+    # Create a model for each diagnosis
+    models = [MRNet().to(device), MRNet().to(device), MRNet().to(device)]
 
-    train_weights = calculate_weights(data_dir, 'train', plane, device)
-    valid_weights = calculate_weights(data_dir, 'valid', plane, device)
+    train_weights = calculate_weights(data_dir, 'train', device)
+    valid_weights = calculate_weights(data_dir, 'valid', device)
 
-    train_criterions = [nn.BCEWithLogitsLoss(pos_weight=train_weights[0]),
-                        nn.BCEWithLogitsLoss(pos_weight=train_weights[1]),
-                        nn.BCEWithLogitsLoss(pos_weight=train_weights[2])]
+    train_criterions = [nn.BCEWithLogitsLoss(pos_weight=weight) \
+                        for weight in train_weights]
 
-    valid_criterions = [nn.BCEWithLogitsLoss(pos_weight=valid_weights[0]),
-                        nn.BCEWithLogitsLoss(pos_weight=valid_weights[1]),
-                        nn.BCEWithLogitsLoss(pos_weight=valid_weights[2])]
+    valid_criterions = [nn.BCEWithLogitsLoss(pos_weight=weight) \
+                        for weight in valid_weights]
 
-    optimizers = [make_adam_optimizer(model_abnormal, lr, weight_decay),
-                  make_adam_optimizer(model_acl, lr, weight_decay),
-                  make_adam_optimizer(model_meniscus, lr, weight_decay)]
+    optimizers = [make_adam_optimizer(model, lr, weight_decay) \
+                  for model in models]
 
     lr_schedulers = [make_lr_scheduler(optimizer) for optimizer in optimizers]
 
