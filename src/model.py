@@ -33,7 +33,7 @@ class MRNet(nn.Module):
             out = self.avg_pool(out).squeeze()
             out = out.max(dim=0, keepdim=True)[0].squeeze()
 
-            out = torch.sigmoid(self.classifier(self.dropout(out)))
+            out = self.classifier(self.dropout(out))
 
             batch_out = torch.cat((batch_out, out), 0)
 

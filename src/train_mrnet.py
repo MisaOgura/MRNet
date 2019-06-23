@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import pandas as pd
 from datetime import datetime
 
 import torch
@@ -12,6 +13,24 @@ from utils import create_output_dir, \
                   print_stats,       \
                   save_losses,       \
                   save_checkpoint
+
+
+def calculate_weights(data_dir, dataset_type, plane, device):
+    diagnoses = ['abnormal', 'acl', 'meniscus']
+
+    labels_path = f'{data_dir}/{dataset_type}_labels.csv'
+    labels_df = pd.read_csv(labels_path)
+
+    weights = []
+
+    for diagnosis in diagnoses:
+        pos_count, neg_count = labels_df[diagnosis].value_counts()
+        weight = torch.cat((torch.ones(pos_count), torch.zeros(neg_count)), 0)
+        weight = weight.to(device)
+
+        weights.append(weight)
+
+    return weights
 
 
 def make_adam_optimizer(model, lr, weight_decay):
@@ -35,41 +54,35 @@ def make_lr_scheduler(optimizer,
                                                 verbose=verbose)
 
 
-def batch_forward_backprop(models, inputs, labels, criterion, optimizers):
-    prevalences = [0.806, 0.233, 0.371]
+def batch_forward_backprop(models, inputs, labels, criterions, optimizers):
     losses = []
 
-    for i, (model, label, prevalence, optimizer) in \
-            enumerate(zip(models, labels[0], prevalences, optimizers)):
+    for i, (model, label, criterion, optimizer) in \
+            enumerate(zip(models, labels[0], criterions, optimizers)):
         model.train()
         optimizer.zero_grad()
 
         out = model(inputs)
-
         loss = criterion(out, label.unsqueeze(0))
-        loss.mul_(1 - prevalence)
         loss.backward()
-
         optimizer.step()
+
         losses.append(loss.item())
 
     return np.array(losses)
 
 
-def batch_forward(models, inputs, labels, criterion):
-    prevalences = [0.806, 0.233, 0.371]
+def batch_forward(models, inputs, labels, criterions):
     preds = []
     losses = []
 
-    for i, (model, label, prevalence) in \
-            enumerate(zip(models, labels[0], prevalences)):
+    for i, (model, label, criterion) in \
+            enumerate(zip(models, labels[0], criterions)):
         model.eval()
 
         out = model(inputs)
         preds.append(out.item())
-
         loss = criterion(out, label.unsqueeze(0))
-        loss.mul_(1 - prevalence)
         losses.append(loss.item())
 
     return np.array(preds), np.array(losses)
@@ -101,7 +114,16 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     model_meniscus = MRNet().to(device)
     models = [model_abnormal, model_acl, model_meniscus]
 
-    criterion = nn.BCELoss()
+    train_weights = calculate_weights(data_dir, 'train', plane, device)
+    valid_weights = calculate_weights(data_dir, 'valid', plane, device)
+
+    train_criterions = [nn.BCEWithLogitsLoss(pos_weight=train_weights[0]),
+                        nn.BCEWithLogitsLoss(pos_weight=train_weights[1]),
+                        nn.BCEWithLogitsLoss(pos_weight=train_weights[2])]
+
+    valid_criterions = [nn.BCEWithLogitsLoss(pos_weight=valid_weights[0]),
+                        nn.BCEWithLogitsLoss(pos_weight=valid_weights[1]),
+                        nn.BCEWithLogitsLoss(pos_weight=valid_weights[2])]
 
     optimizers = [make_adam_optimizer(model_abnormal, lr, weight_decay),
                   make_adam_optimizer(model_acl, lr, weight_decay),
@@ -124,7 +146,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
             inputs, labels = inputs.to(device), labels.to(device)
 
             batch_loss = batch_forward_backprop(models, inputs, labels,
-                                                criterion, optimizers)
+                                                train_criterions, optimizers)
             batch_train_losses += batch_loss
 
         valid_preds = []
@@ -134,7 +156,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
             inputs, labels = inputs.to(device), labels.to(device)
 
             batch_preds, batch_loss = \
-                batch_forward(models, inputs, labels, criterion)
+                batch_forward(models, inputs, labels, valid_criterions)
             batch_valid_losses += batch_loss
 
             valid_labels.append(labels.detach().cpu().numpy().squeeze())
