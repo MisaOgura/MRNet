@@ -7,7 +7,7 @@ from PIL import Image
 import torch
 import numpy as np
 import pandas as pd
-from sklearn.externals import joblib
+import joblib
 from torchvision import transforms
 
 from model import MRNet

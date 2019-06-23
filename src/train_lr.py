@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch
 import numpy as np
 from sklearn.linear_model import LogisticRegressionCV
-from sklearn.externals import joblib
+import joblib
 
 from model import MRNet
 from data_loader import make_data_loader
