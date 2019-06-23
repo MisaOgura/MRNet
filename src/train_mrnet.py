@@ -25,9 +25,8 @@ def calculate_weights(data_dir, dataset_type, plane, device):
 
     for diagnosis in diagnoses:
         pos_count, neg_count = labels_df[diagnosis].value_counts()
-        weight = torch.cat((torch.ones(pos_count), torch.zeros(neg_count)), 0)
+        weight = torch.tensor([neg_count / pos_count])
         weight = weight.to(device)
-
         weights.append(weight)
 
     return weights
