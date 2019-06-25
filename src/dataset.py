@@ -1,3 +1,4 @@
+import os
 import torch
 import numpy as np
 import pandas as pd
@@ -8,12 +9,14 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+MEAN = 58.09
+STDDEV = 49.73
+
 
 class MRNetDataset(Dataset):
     def __init__(self, dataset_dir, labels_path, plane, transform=None, device=None):
         self.case_paths = sorted(glob(f'{dataset_dir}/**'))
         self.labels_df = pd.read_csv(labels_path)
-        self.plane = plane
         self.transform = transform
         self.window = 7
         self.device = device
@@ -25,18 +28,20 @@ class MRNetDataset(Dataset):
 
     def __getitem__(self, idx):
         case_path = self.case_paths[idx]
-        case = int(case_path.split('/')[-1])
-        image_paths = sorted(glob(f'{case_path}/{self.plane}/*.png'))
+        case_id = int(os.path.splitext(os.path.basename(case_path))[0])
 
-        data = torch.tensor([]).to(self.device)
+        series = np.load(case_path).astype(np.uint8)
+        series = list(np.stack((series,) * 3, axis=1))
 
-        for path in image_paths:
-            image = Image.open(path)
-            if self.transform is not None:
-                image = self.transform(image).unsqueeze(0).to(self.device)
-            data = torch.cat((data, image), 0)
+        data = torch.tensor([])
 
-        case_row = self.labels_df[self.labels_df.case == case]
+        if self.transform is not None:
+            for slice in series:
+                slice = self.transform(slice.transpose(1, 2, 0))
+                slice = slice.unsqueeze(0)
+                data = torch.cat((data, slice), 0)
+
+        case_row = self.labels_df[self.labels_df.case == case_id]
         diagnoses = case_row.values[0,1:].astype(np.float32)
         label = torch.tensor(diagnoses)
 
@@ -53,12 +58,14 @@ def make_dataset(data_dir, dataset_type, plane, device=None):
 
     if dataset_type == 'train':
         transform = transforms.Compose([
+            transforms.ToPILImage(),
             transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(25, translate=(0.1, 0.1)),
             transforms.ToTensor()
         ])
     elif dataset_type == 'valid':
         transform = transforms.Compose([
+            transforms.ToPILImage(),
             transforms.ToTensor()
         ])
     else:
