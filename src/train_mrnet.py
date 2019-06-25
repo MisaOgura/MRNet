@@ -104,16 +104,14 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
     print(f'Creating models...')
 
     # Create a model for each diagnosis
+
     models = [MRNet().to(device), MRNet().to(device), MRNet().to(device)]
 
-    train_weights = calculate_weights(data_dir, 'train', device)
-    valid_weights = calculate_weights(data_dir, 'valid', device)
+    # Calculate loss weights based on the prevalences in train set
 
-    train_criterions = [nn.BCEWithLogitsLoss(pos_weight=weight) \
-                        for weight in train_weights]
-
-    valid_criterions = [nn.BCEWithLogitsLoss(pos_weight=weight) \
-                        for weight in valid_weights]
+    pos_weights = calculate_weights(data_dir, 'train', device)
+    criterions = [nn.BCEWithLogitsLoss(pos_weight=weight) \
+                  for weight in pos_weights]
 
     optimizers = [make_adam_optimizer(model, lr, weight_decay) \
                   for model in models]
@@ -135,7 +133,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
             inputs, labels = inputs.to(device), labels.to(device)
 
             batch_loss = batch_forward_backprop(models, inputs, labels,
-                                                train_criterions, optimizers)
+                                                criterions, optimizers)
             batch_train_losses += batch_loss
 
         valid_preds = []
@@ -145,7 +143,7 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
             inputs, labels = inputs.to(device), labels.to(device)
 
             batch_preds, batch_loss = \
-                batch_forward(models, inputs, labels, valid_criterions)
+                batch_forward(models, inputs, labels, criterions)
             batch_valid_losses += batch_loss
 
             valid_labels.append(labels.detach().cpu().numpy().squeeze())
