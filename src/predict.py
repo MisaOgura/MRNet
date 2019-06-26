@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import sys
 import csv
 from PIL import Image
@@ -24,6 +25,12 @@ def main(paths_csv, output_path):
     input_files_df = pd.read_csv(paths_csv, header=None)
     mrnet_paths = 'src/mrnet_paths.txt'
     lr_paths = 'src/lr_paths.txt'
+
+    output_file = f'{output_dir}/predictions.csv'
+
+    if os.path.exists(output_file):
+        os.rename(output_file, f'{output_file}.back')
+        print(f'***{output_file} already exists, renamed to {output_file}.bak')
 
     # Load MRNet models
     print(f'Loading CNN models listed in {mrnet_paths}...')
@@ -64,7 +71,7 @@ def main(paths_csv, output_path):
     ])
 
     print(f'Generating predictions per case...')
-    print(f'Predictions will be saved to {output_path}')
+    print(f'Predictions will be saved to {output_file}')
 
     for i in tqdm(range(0, len(npy_paths), 3)):
         case_paths = [npy_paths[i], npy_paths[i+1], npy_paths[i+2]]
@@ -102,13 +109,13 @@ def main(paths_csv, output_path):
 
         # Write to output csv - append if it exists already
 
-        with open(output_path, 'a+') as csv_file:
+        with open(output_file, 'a+') as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(case_preds)
 
 
 if __name__ == '__main__':
     paths_csv = sys.argv[1]
-    output_path = sys.argv[2]
+    output_dir = sys.argv[2]
 
-    main(paths_csv, output_path)
+    main(paths_csv, output_dir)
