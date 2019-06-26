@@ -15,6 +15,8 @@ The code is developed primarily with:
 - `torchvision 0.3.0`
 - `scikit-learn 0.21.2`
 
+Please make sure you have correct versions of these packages available as a default in your environment.
+
 ### 1. Clone the repo
 
 ```terminal
@@ -55,7 +57,7 @@ README.md  notebooks/  scripts/  src/
 Diagnoses (`0` for negative, `1` for positive) of each condition per case are provided as three separate `csv` files. It would be handy to have all the diagnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
 
 ```terminal
-$ python3 scripts/make_labels.py MRNet-v1.0
+$ python scripts/make_labels.py MRNet-v1.0
 ...
 Created 'train_labels.csv' and 'valid_labels.csv' in MRNet-v1.0
 ```
@@ -68,7 +70,7 @@ Now we're ready to move on to training!
 
 First step is to train [9 CNNs](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g002), each predicting probabilities of 3 diagnoses (abnormal, acl tear and meniscual tear) based on an MRI series from 3 planes (axial, sagittal and coronal).
 
-`src/train_mrnet.py` expects below parameters:
+`src/train_cnn_models.py` expects below parameters:
 
 - `<data_dir>`: directory where the data lives
 - `<plane>`: `axial`, `coronal` or `sagittal`
@@ -82,7 +84,7 @@ To train CNNs, run:
 ```terminal
 $ export PYTHONPATH=$PYTHONPATH:`pwd`
 
-$ python3 -u src/train_mrnet.py MRNet-v1.0 axial 10 0.00001 0.01
+$ python -u src/train_cnn_models.py MRNet-v1.0 axial 10 0.00001 0.01
 Parsing arguments...
 Creating data loaders...
 Creating models...
@@ -107,7 +109,7 @@ A checkpoint `mrnet_{plane}_{diagnosis}_{epoch}**.pt` is saved whenever the lowe
 
 For a given diagnosis, predictions from 3 series per exam are combined using [logistic regression](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g004) to weight them accordingly and generate a single output for each exam in the training set.
 
-`src/train_lr.py` expects below parameters:
+`src/train_lr_models.py` expects below parameters:
 
 - `<data_dir>`: directory where the data lives
 - `<models_dir>`: directory where CNN models are saved
@@ -115,7 +117,7 @@ For a given diagnosis, predictions from 3 series per exam are combined using [lo
 To train logistic regression models, run:
 
 ```terminal
-$ python3 -u src/train_lr.py MRNet-v1.0 path/to/models
+$ python -u src/train_lr_models.py MRNet-v1.0 path/to/models
 Parsing arguments...
 Loading CNN best models from models/2019-06-24_04-18...
 Creating data loaders...
@@ -145,7 +147,7 @@ First we need to obtain model predictions on the validation dataset.
 To train generate predictions on the `valid` dataset, run:
 
 ```terminal
-$ python3 -u src/predict.py valid-paths.csv path/to/models
+$ python -u src/predict.py valid-paths.csv path/to/models
 Loading CNN models listed in src/mrnet_paths.txt...
 Loading logistic regression models listed in src/lr_paths.txt...
 Generating predictions per case...

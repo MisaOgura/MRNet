@@ -1,6 +1,23 @@
+#!/usr/bin/env python
+"""Train a CNN to predict abnormalities, ACL tears and meniscal tears
+for a given plane (axial, coronal or sagittal) of images.
+
+Usage:
+  ./tran.py [options] <csv_file>...
+  ./evaluate.py (-h | --help)
+  ./evaluate.py --version
+
+General options:
+
+  -h --help                              Show this screen.
+  --version                              Show version.
+  --threshold=<threshold>                Threshold for recognition [default: -1].
+"""
+
 import sys
 import numpy as np
 import pandas as pd
+from docopt import docopt
 from datetime import datetime
 
 import torch
