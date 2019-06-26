@@ -83,7 +83,7 @@ def main(paths_csv, output_path):
             series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
             series = (series - MEAN) / STD
 
-            data.append(series.unsqueeze(0))
+            data.append(series.unsqueeze(0).to(device))
 
         # Make predictions per case
 
