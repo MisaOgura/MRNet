@@ -15,7 +15,7 @@ STDDEV = 49.73
 
 class MRNetDataset(Dataset):
     def __init__(self, dataset_dir, labels_path, plane, transform=None, device=None):
-        self.case_paths = sorted(glob(f'{dataset_dir}/**'))
+        self.case_paths = sorted(glob(f'{dataset_dir}/{plane}/**.npy'))
         self.labels_df = pd.read_csv(labels_path)
         self.transform = transform
         self.window = 7
@@ -74,4 +74,3 @@ def make_dataset(data_dir, dataset_type, plane, device=None):
     dataset = MRNetDataset(dataset_dir, labels_path, plane, transform=transform, device=device)
 
     return dataset
-

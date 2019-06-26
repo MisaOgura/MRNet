@@ -51,27 +51,30 @@ def main(paths_csv, output_path):
 
     npy_paths = [row.values[0] for _, row in input_files_df.iterrows()]
 
-    transform = transforms.ToTensor()
-
-    preds = []
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.ToTensor()
+    ])
 
     for i in range(0, len(npy_paths), 3):
         case_paths = [npy_paths[i], npy_paths[i+1], npy_paths[i+2]]
 
+        # Convert npy series to rgb, then to torch tensor
+
         data = []
 
-        # Convert npy to rgb, then to torch tensor
+        for case_path in case_paths:
+            series = np.load(case_path).astype(np.uint8)
+            series = list(np.stack((series,) * 3, axis=1))
 
-        for series_path in case_paths:
-            series_npy = np.load(series_path)
-            series = torch.tensor([]).to(device)
+            series_data = torch.tensor([])
 
-            for i, image in enumerate(series_npy):
-                rgb = Image.fromarray(image, 'L').convert('RGB')
-                tensor = transform(rgb).unsqueeze(0).to(device)
-                series = torch.cat((series, tensor), 0)
+            for slice in series:
+                slice = transform(slice.transpose(1, 2, 0))
+                slice = slice.unsqueeze(0)
+                series_data = torch.cat((series_data, slice), 0)
 
-            data.append(series.unsqueeze(0))
+            data.append(series_data.unsqueeze(0))
 
         # Make predictions per case
 
@@ -79,7 +82,6 @@ def main(paths_csv, output_path):
 
         for i, mrnet in enumerate(mrnets):  # For each condition (mrnet)
             # Based on each plane (data)
-
             sagittal_pred = mrnet[0](data[0]).detach().cpu().item()
             coronal_pred = mrnet[1](data[1]).detach().cpu().item()
             axial_pred = mrnet[2](data[2]).detach().cpu().item()
