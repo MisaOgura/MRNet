@@ -46,21 +46,24 @@ def main(data_dir, models_dir):
     ys = []
     Xs = [[],[],[]]  # Abnormal, ACL, Meniscus
 
-    for (axial_inputs, labels), (coronal_inputs, _), (sagittal_inputs, _) in \
-            tqdm(zip(axial_loader, coronal_loader, sagittal_loader)):
+    with tqdm(total=len(axial_loader)) as pbar:
+        for (axial_inputs, labels), (coronal_inputs, _), (sagittal_inputs, _) in \
+                zip(axial_loader, coronal_loader, sagittal_loader):
 
-        axial_inputs, coronal_inputs, sagittal_inputs = \
-            axial_inputs.to(device), coronal_inputs.to(device), sagittal_inputs.to(device)
+            axial_inputs, coronal_inputs, sagittal_inputs = \
+                axial_inputs.to(device), coronal_inputs.to(device), sagittal_inputs.to(device)
 
-        ys.append(labels[0].cpu().tolist())
+            ys.append(labels[0].cpu().tolist())
 
-        for i, model in enumerate(models):
-            axial_pred = model[0](axial_inputs).detach().cpu().item()
-            coronal_pred = model[1](coronal_inputs).detach().cpu().item()
-            sagittal_pred = model[2](sagittal_inputs).detach().cpu().item()
+            for i, model in enumerate(models):
+                axial_pred = model[0](axial_inputs).detach().cpu().item()
+                coronal_pred = model[1](coronal_inputs).detach().cpu().item()
+                sagittal_pred = model[2](sagittal_inputs).detach().cpu().item()
 
-            X = [axial_pred, coronal_pred, sagittal_pred]
-            Xs[i].append(X)
+                X = [axial_pred, coronal_pred, sagittal_pred]
+                Xs[i].append(X)
+
+            pbar.update(1)
 
     ys = np.asarray(ys).transpose()
     Xs = np.asarray(Xs)
