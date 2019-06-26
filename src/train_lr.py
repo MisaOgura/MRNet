@@ -50,7 +50,7 @@ def main(data_dir, models_dir):
             tqdm(zip(axial_loader, coronal_loader, sagittal_loader)):
 
         axial_inputs, coronal_inputs, sagittal_inputs = \
-            axial_inputs.to(device), coronal_inputs.to(device), sagittal_inpuits.to(device)
+            axial_inputs.to(device), coronal_inputs.to(device), sagittal_inputs.to(device)
 
         ys.append(labels[0].cpu().tolist())
 
