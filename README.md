@@ -40,7 +40,7 @@ README.md  notebooks/  scripts/  src/
     $ cd path/to/MRNet
 
     $ ls
-    README.md  notebooks/  scripts/  src/  MRNet-v1.0/
+    MRNet-v1.0/  README.md  notebooks/  scripts/  src/
     ```
 
 ### 3. Merge diagnoses to make labels
