@@ -9,8 +9,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+MAX_PIXEL_VAL = 255
 MEAN = 58.09
-STDDEV = 49.73
+STD = 49.73
 
 
 class MRNetDataset(Dataset):
