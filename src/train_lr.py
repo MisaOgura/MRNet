@@ -49,6 +49,9 @@ def main(data_dir, models_dir):
     for (axial_inputs, labels), (coronal_inputs, _), (sagittal_inputs, _) in \
             tqdm(zip(axial_loader, coronal_loader, sagittal_loader)):
 
+        axial_inputs, coronal_inputs, sagittal_inputs = \
+            axial_inputs.to(device), coronal_inputs.to(device), sagittal_inpuits.to(device)
+
         ys.append(labels[0].cpu().tolist())
 
         for i, model in enumerate(models):
