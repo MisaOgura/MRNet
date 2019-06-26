@@ -3,6 +3,7 @@
 import sys
 import csv
 from PIL import Image
+from tqdm import tqdm
 
 import torch
 import numpy as np
@@ -21,6 +22,7 @@ def main(paths_csv, output_path):
     lr_paths = 'src/lr_paths.txt'
 
     # Load MRNet models
+    print(f'Loading CNN models listed in {mrnet_paths}...')
 
     mrnet_paths = [line.rstrip('\n') for line in open(mrnet_paths, 'r')]
 
@@ -43,6 +45,7 @@ def main(paths_csv, output_path):
     mrnets = [abnormal_mrnets, acl_mrnets, meniscus_mrnets]
 
     # Load logistic regression models
+    print(f'Loading logistic regression models listed in {lr_paths}...')
 
     lr_paths = [line.rstrip('\n') for line in open(lr_paths, 'r')]
     lrs = [joblib.load(lr_path) for lr_path in lr_paths]
@@ -56,7 +59,10 @@ def main(paths_csv, output_path):
         transforms.ToTensor()
     ])
 
-    for i in range(0, len(npy_paths), 3):
+    print(f'Generating predictions per case...')
+    print(f'Predictions will be saved to {output_path}')
+
+    for i in tqdm(range(0, len(npy_paths), 3)):
         case_paths = [npy_paths[i], npy_paths[i+1], npy_paths[i+2]]
 
         # Convert npy series to rgb, then to torch tensor
@@ -64,17 +70,16 @@ def main(paths_csv, output_path):
         data = []
 
         for case_path in case_paths:
-            series = np.load(case_path).astype(np.uint8)
-            series = list(np.stack((series,) * 3, axis=1))
+            series = np.load(case_path).astype(np.float32)
+            series = torch.tensor(np.stack((series,)*3, axis=1))
 
-            series_data = torch.tensor([])
+            for i, slice in enumerate(series.split(1)):
+                series[i] = self.transform(slice.squeeze())
 
-            for slice in series:
-                slice = transform(slice.transpose(1, 2, 0))
-                slice = slice.unsqueeze(0)
-                series_data = torch.cat((series_data, slice), 0)
+            series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
+            series = (series - MEAN) / STD
 
-            data.append(series_data.unsqueeze(0))
+            data.append(series.unsqueeze(0))
 
         # Make predictions per case
 
