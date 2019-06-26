@@ -20,7 +20,7 @@ def main(data_dir, models_dir):
 
     models = []
 
-    print(f'Loading CNN models from {models_dir}...')
+    print(f'Loading best CNN models from {models_dir}...')
 
     for condition in conditions:
         models_per_condition = []
@@ -74,7 +74,7 @@ def main(data_dir, models_dir):
         clfs.append(clf)
 
     for i, clf in enumerate(clfs):
-        print(f'Cross validation score for {conditions[i]}: {clf.score(X, y)}')
+        print(f'Cross validation score for {conditions[i]}: {clf.score(X, y):.3f}')
         clf_path = f'{models_dir}/lr_{conditions[i]}.pkl'
         joblib.dump(clf, clf_path)
 
