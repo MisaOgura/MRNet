@@ -30,22 +30,25 @@ class MRNetDataset(Dataset):
         case_path = self.case_paths[idx]
         case_id = int(os.path.splitext(os.path.basename(case_path))[0])
 
-        series = np.load(case_path).astype(np.uint8)
-        series = list(np.stack((series,) * 3, axis=1))
+        series = np.load(case_path).astype(np.float32)
+        series = torch.tensor(np.stack((series,)*3, axis=1))
 
-        data = torch.tensor([])
-
+        # Apply transform
         if self.transform is not None:
-            for slice in series:
-                slice = self.transform(slice.transpose(1, 2, 0))
-                slice = slice.unsqueeze(0)
-                data = torch.cat((data, slice), 0)
+            for i, slice in enumerate(series.split(1)):
+                series[i] = self.transform(slice.squeeze())
+
+        # Standardise
+        series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
+
+        # Normalise
+        series = (series - MEAN) / STD
 
         case_row = self.labels_df[self.labels_df.case == case_id]
         diagnoses = case_row.values[0,1:].astype(np.float32)
-        label = torch.tensor(diagnoses)
+        labels = torch.tensor(diagnoses)
 
-        return (data, label)
+        return (series, labels)
 
 
 def make_dataset(data_dir, dataset_type, plane, device=None):
@@ -54,7 +57,6 @@ def make_dataset(data_dir, dataset_type, plane, device=None):
 
     dataset_dir = f'{data_dir}/{dataset_type}'
     labels_path = f'{data_dir}/{dataset_type}_labels.csv'
-    transform = None
 
     if dataset_type == 'train':
         transform = transforms.Compose([
