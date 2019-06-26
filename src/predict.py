@@ -13,6 +13,10 @@ from torchvision import transforms
 
 from model import MRNet
 
+MAX_PIXEL_VAL = 255
+MEAN = 58.09
+STD = 49.73
+
 
 def main(paths_csv, output_path):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -74,7 +78,7 @@ def main(paths_csv, output_path):
             series = torch.tensor(np.stack((series,)*3, axis=1))
 
             for i, slice in enumerate(series.split(1)):
-                series[i] = self.transform(slice.squeeze())
+                series[i] = transform(slice.squeeze())
 
             series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
             series = (series - MEAN) / STD
