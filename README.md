@@ -1,82 +1,119 @@
 # MRNet
 
+Code implementation of the paper [Deep-learning-assisted diagnosis for knee magnetic resonance imaging: Development and retrospective validation of MRNet](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699), the [Stanford ML Group](https://stanfordmlgroup.github.io/).
+
+It is developed for participating in the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/).
+
+For more info, see [Background](#background) section.
+
 ## TL;DR - Quickstart
 
-1. Download data
+### 1. Clone the repo
 
-    - Request access to the dataset on the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/) page
-    - Move to the project root
+```terminal
+$ git clone git@github.com:MisaOgura/MRNet.git
+Cloning into 'MRNet'...
+...
+Resolving deltas: 100% (243/243), done.
 
-        ```bash
-        $ cd path/to/MRNet
-        ```
+$ cd MRNet
 
-    - make a `data` directory at the project root
+$ ls
+README.md  notebooks/  scripts/  src/
+```
 
-        ```bash
-        $ mkdir data
-        ```
+### 2. Download data
 
-    - Unzip the archive and move to the `data` directory
+- Request access to the dataset on the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/) page
 
-        ```bash
-        $ unzip -qq MRNet-v1.0.zip -d data
-        ```
+- Unzip the archive and save it to the `MRNet` project root
 
-2. Preprocess data
-
-    Stay at the project root, run:
-
-    ```bash
-    $ ./scripts/process-data.sh <data_dir> <out_dir>
-    ...
-    ...
-    # Wait until the processing is completed
-    Preprocessing finished.
+    ```terminal
+    $ unzip -qq MRNet-v1.0.zip -d path/to/MRNet
     ```
 
-    The script expects 2 parameters:
+- You now should have `MRNet-v1.0` directory in the project root
 
-    - `<data_dir>`: Points to the root of the MRNet dataset
-    e.g. `data/MRNet-v1.0`
+    ```terminal
+    $ cd path/to/MRNet
 
-    - `<out_dir>`: Where the process data should be stored. It will be automatically created if it doesn't exist. If the directory exists, it will rename the old directory to `<out_dir>.bak` and create a fresh directory.
-        e.g. `data/processed`
-
-    Preprocessing can take anywhere between 5 ~ 30min, depending on the number of cores available on the machine.
-
-3. Train a model
-
-    You can train an individual MRNet using MRI series from a specific plane.
-
-    `mrnet/train.py` expects below parameters:
-
-    - `<data_dir>`: directory where _processed_ data lives
-    - `<plane>`: `axial`, `coronal` or `sagittal`
-    - `<epochs>`: number of epochs to train for
-    - `<lr>`: learning rate for `nn.optim.Adam` optimizer
-    - `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
-    - `<device>`: `cpu` or `cuda`
-
-    To train a model using the preprocessed data, from the project root, run:
-
-    ```bash
-    $ $ export PYTHONPATH=$PYTHONPATH:`pwd`
-
-    $ python/python3 -u mrnet/train.py data/processed axial 10 0.00001 0.01 cpu
-
-    Parsing arguments...
-    Creating data loaders...
-    Creating models...
-    Training a model using axial series...
-    === Epoch 1/10 ===
-    Train losses - abnormal: 0.479, acl: 0.518, meniscus: 0.669
-    Valid losses - abnormal: 0.472, acl: 0.882, meniscus: 0.667
-    === Epoch 2/10 ===
-    ...
+    $ ls
+    README.md  notebooks/  scripts/  src/  MRNet-v1.0/
     ```
 
-4. Evaluate a model - WIP
+### 3. Merge diagnoses to make labels
+
+Diagnoses (`0` for negative, `1` for positive) of each condition per case are provided as three separate `csv` files. It would be handy to have all the diagnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
+
+```terminal
+$ python3 scripts/make_labels.py MRNet-v1.0
+...
+Created 'train_labels.csv' and 'valid_labels.csv' in MRNet-v1.0
+```
+
+Now we're ready to move onto training!
+
+### 4. Train models
+
+#### 4.1. Train convolutional neural networks (CNNs)
+
+First step is to train [9 CNNs](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g002), each predicting probabilities of 3 diagnoses (abnormal, acl tear and meniscual tear) based on an MRI series from 3 planes (axial, sagittal and coronal).
+
+`src/train_mrnet.py` expects below parameters:
+
+- `<data_dir>`: directory where the data lives
+- `<plane>`: `axial`, `coronal` or `sagittal`
+- `<epochs>`: number of epochs to train for
+- `<lr>`: learning rate for `nn.optim.Adam` optimizer
+- `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
+- `<device>`: `cpu` or `cuda`
+
+To train CNNs, run below from the project root:
+
+```terminal
+$ export PYTHONPATH=$PYTHONPATH:`pwd`
+
+$ python3 -u src/train_mrnet.py MRNet-v1.0 axial 10 0.00001 0.01
+Parsing arguments...
+Creating data loaders...
+Creating models...
+Training a model using axial series...
+Checkpoints and losses will be save to ./models/2019-06-25_12-37
+=== Epoch 1/10 ===
+Train losses - abnormal: 0.257, acl: 1.168, meniscus: 0.906
+Valid losses - abnormal: 0.272, acl: 0.747, meniscus: 0.769
+Valid AUCs - abnormal: 0.853, acl: 0.765, meniscus: 0.657
+Min valid loss for abnormal, saving the checkpoint...
+Min valid loss for acl, saving the checkpoint...
+Min valid loss for meniscus, saving the checkpoint...
+=== Epoch 2/50 ===
+...
+```
+
+It create a directory for each experiment, named with a timestamp (format: `f'{datetime.now():%Y-%m-%d_%H-%M}'`), where all the output will be saved.
+
+A checkpoint is saved whenever the loweset validation loss is achieved for a particular diagnosis. The training and validation losses are also saved as a `csv` file.
+
+#### 4.2. Train logistic regression models
+
+For a given diagnosis, predictions from 3 series per exam are combined using [logistic regression](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g004) to weight them accordingly and generate a single output for each exam in the training set.
+
+`src/train_lr.py` expects below parameters:
+
+- `<data_dir>`: directory where the data lives
+- `<models_dir>`: directory where CNN models are saved
+
+To train logistic regression models,
+
+```terminal
+$ python3 -u src/train_lr.py MRNet-v1.0 path/to/models
+```
+
+### 5. Evaluate a model
+
+#### 5.1. Obtain predictions
+
+#### 5.2. Calculate AUC scores
 
 ## Background
 
@@ -120,95 +157,12 @@ The hidden test set is _not publically available_ and is used for scoring models
 
 - In the paper, an external validation was performed on a [pubclically available data](http://www.riteh.uniri.hr/~istajduh/projects/kneeMRI/).
 
-## Data preprocessing
+# Author
 
-The information on preprocessing can be found in the [Methods section](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699#sec008) of the paper.
+### Misa Ogura
 
-The MRNet dataset consists of following components.
+#### 👩🏻‍💻 R&D Software Engineer @ [BBC](https://www.bbc.co.uk/rd/blog)
 
-```bash
-data/MRNet-v1.0
-├── train
-│   ├── axial  # plane
-│   │   ├── 0000.npy  # case
-│   │   ├── 0001.npy  # case
-│   │   ...
-│   ├── coronal
-│   └── sagittal
-├── train-abnormal.csv  # labels for abnormalities per case
-├── train-acl.csv  # labels for ACL tear per case
-├── train-meniscus.csv  # labels for meniscal tear per case
-├── valid
-│   ├── axial
-│   ├── coronal
-│   └── sagittal
-├── valid-abnormal.csv
-├── valid-acl.csv
-└── valid-meniscus.csv
-```
+#### 🏳️‍🌈 Co-founder of [Women Driven Development](https://womendrivendev.org/)
 
-There are couple of things we need to do to prepare the dataset in the shape and format we want.
-
-### 1. Organise image data per case
-
-In the original data structure, the image data for `train` and `valid` sets is organised _per plane_. However, later on we will be combining the decisions obtained from each plane per case to produce a final decision. Therefore it would be more useful to organise the data per case.
-
-### 2. Convert image data from `numpy` arrays to RGB image
-
-Each series of MRI images is provided as a `<case_number>.npy` file, which contains a numpy array of shape `(s, 256, 256)` where s is the number of images in the series. We need to convert the image data to be an RGB image with 3 colour channel as an input to a CNN. We will save the converted image as a `png` file.
-
-### 3. Merge diagnoses to make labels
-
-The diagnosis (`0` for negative, `1` for positive) of each condition for the examined cases are provided as three separate `csv` files. It would be handy to have all the diagnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
-
-### Data preprocessing pipeline
-
-I have created a pipeline composed of a series of scripts, so that we can process data in one command.
-
-To see what exactly scripts are doing, check out the [scripts](./scripts) directory in the repo.
-
-By default, the script will find out the number of CPUs on the machine you're running the command from and use _all the cores_ to parallelise the processing. If you wish to modify the number of cores used, change `$num_cpu` to the desired number of CPUs in [scripts/process-image-data.sh](./scripts/process-image-data.sh).
-
-From the root of the project, run:
-
-```bash
-$ ./scripts/process-data.sh <data_dir> <out_dir>
-...
-...
-# Wait until the processing is completed
-Preprocessing finished.
-```
-
-The script expects 2 parameters:
-
-- `<data_dir>`: points to the root of the MRNet dataset e.g. `data/MRNet-v1.0`
-
-- `<out_dir>`: where the process data should be stored e.g. `data/processed`
-
-It takes anywhere from at least a few minutes to > 10mins to process the entire dataset, depending on the number of cores you are using.
-
-So go away, have a break and come back in your own time ☕
-
-Once the processing is finished, you have a **new dataset (~8.4G)** that is created to the `<out_dir>` specified (the original dataset is left _untouched_).
-
-It has the below structure:
-
-```bash
-data/processed
-├── train
-│   ├── 0000  # case
-│   │   ├── axial  # plane
-│   │   │   ├── 000.png  # image in a series
-│   │   │   ├── 001.png
-│   │   │   ...
-│   │   ├── coronal
-│   │   └── sagittal
-│   ├── 0001
-│   │   ├── axial
-│   │   ├── coronal
-│   │   └── sagittal
-│   ...
-├── train_labels.csv  # labels for all conditions per case
-├── valid
-└── valid_labels.csv
-```
+[Github](https://github.com/MisaOgura) | [Medium](https://medium.com/@misaogura) | [twitter](https://twitter.com/misa_ogura) | [LinkedIn](https://www.linkedin.com/in/misaogura/)
