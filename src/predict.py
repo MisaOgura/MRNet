@@ -1,10 +1,33 @@
 #!/usr/bin/env python
+"""Calculates predictions on the validation dataset, using CNN models specified
+in src/cnn_models_paths.txt and logistic regression models specified in
+src/lr_models_paths.txt
+
+Usage:
+  predict.py <valid_paths_csv> <output_dir>
+  predict.py (-h | --help)
+
+General options:
+  -h --help          Show this screen.
+
+Arguments:
+  <valid_paths_csv>  csv file listing paths to validation set, which needs to
+                     be in a specific order - an example is provided as
+                     valid-paths.csv in the root of the project
+                     e.g. 'valid-paths.csv'
+  <output_dir>       Directory where predictions are saved as a 3-column csv
+                     file (with no header), where each column contains a
+                     prediction for abnormality, ACL tear, and meniscal tear,
+                     in that order
+                     e.g. 'out_dir'
+"""
 
 import os
 import sys
 import csv
 from PIL import Image
 from tqdm import tqdm
+from docopt import docopt
 
 import torch
 import numpy as np
@@ -19,29 +42,32 @@ MEAN = 58.09
 STD = 49.73
 
 
-def main(paths_csv, output_path):
+def main(valid_paths_csv, output_dir):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    input_files_df = pd.read_csv(paths_csv, header=None)
-    mrnet_paths = 'src/mrnet_paths.txt'
-    lr_paths = 'src/lr_paths.txt'
+    input_files_df = pd.read_csv(valid_paths_csv, header=None)
+    cnn_models_paths = 'src/cnn_models_paths.txt'
+    lr_models_paths = 'src/lr_models_paths.txt'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     output_file = f'{output_dir}/predictions.csv'
 
     if os.path.exists(output_file):
         os.rename(output_file, f'{output_file}.back')
-        print(f'***{output_file} already exists, renamed to {output_file}.bak')
+        print(f'!! {output_file} already exists, renamed to {output_file}.bak')
 
     # Load MRNet models
-    print(f'Loading CNN models listed in {mrnet_paths}...')
+    print(f'Loading CNN models listed in {cnn_models_paths}...')
 
-    mrnet_paths = [line.rstrip('\n') for line in open(mrnet_paths, 'r')]
+    cnn_models_paths = [line.rstrip('\n') for line in open(cnn_models_paths, 'r')]
 
     abnormal_mrnets =[]
     acl_mrnets = []
     meniscus_mrnets = []
 
-    for i, mrnet_path in enumerate(mrnet_paths):
+    for i, mrnet_path in enumerate(cnn_models_paths):
         model = MRNet().to(device)
         checkpoint = torch.load(mrnet_path, map_location=device)
         model.load_state_dict(checkpoint['state_dict'])
@@ -56,10 +82,10 @@ def main(paths_csv, output_path):
     mrnets = [abnormal_mrnets, acl_mrnets, meniscus_mrnets]
 
     # Load logistic regression models
-    print(f'Loading logistic regression models listed in {lr_paths}...')
+    print(f'Loading logistic regression models listed in {lr_models_paths}...')
 
-    lr_paths = [line.rstrip('\n') for line in open(lr_paths, 'r')]
-    lrs = [joblib.load(lr_path) for lr_path in lr_paths]
+    lr_models_paths = [line.rstrip('\n') for line in open(lr_models_paths, 'r')]
+    lrs = [joblib.load(lr_path) for lr_path in lr_models_paths]
 
     # Parse input, 3 rows at a time (i.e. per case)
 
@@ -71,7 +97,7 @@ def main(paths_csv, output_path):
     ])
 
     print(f'Generating predictions per case...')
-    print(f'Predictions will be saved to {output_file}')
+    print(f'Predictions will be saved as {output_file}')
 
     for i in tqdm(range(0, len(npy_paths), 3)):
         case_paths = [npy_paths[i], npy_paths[i+1], npy_paths[i+2]]
@@ -115,7 +141,9 @@ def main(paths_csv, output_path):
 
 
 if __name__ == '__main__':
-    paths_csv = sys.argv[1]
-    output_dir = sys.argv[2]
+    arguments = docopt(__doc__)
 
-    main(paths_csv, output_dir)
+    print('Parsing arguments...')
+
+    main(arguments['<valid_paths_csv>'],
+         arguments['<output_dir>'])

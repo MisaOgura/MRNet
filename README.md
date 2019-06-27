@@ -15,8 +15,6 @@ The code is developed primarily with:
 - `torchvision 0.3.0`
 - `scikit-learn 0.21.2`
 
-Please make sure you have correct versions of these packages available as a default in your environment.
-
 ### 1. Clone the repo
 
 ```terminal
@@ -70,21 +68,34 @@ Now we're ready to move on to training!
 
 First step is to train [9 CNNs](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g002), each predicting probabilities of 3 diagnoses (abnormal, acl tear and meniscual tear) based on an MRI series from 3 planes (axial, sagittal and coronal).
 
-`src/train_cnn_models.py` expects below parameters:
+```terminal
+$ python src/train_cnn_models.py -h
+Trains three CNN models to predict abnormalities, ACL tears and meniscal
+tears for a given plane (axial, coronal or sagittal) of knee MRI images.
 
-- `<data_dir>`: directory where the data lives
-- `<plane>`: `axial`, `coronal` or `sagittal`
-- `<epochs>`: number of epochs to train for
-- `<lr>`: learning rate for `nn.optim.Adam` optimizer
-- `<weight_decay>`: weight decay for `nn.optim.Adam` optimizer
-- `<device>`: `cpu` or `cuda`
+Usage:
+  train_cnn_models.py <data_dir> <plane> <epochs> [options]
+  train_cnn_models.py (-h | --help)
+
+General options:
+  -h --help             Show this screen.
+
+Arguments:
+  <data_dir>            Path to a directory where the data lives e.g. 'MRNet-v1.0'
+  <plane>               MRI plane of choice ('axial', 'coronal', 'sagittal')
+  <epochs>              Number of epochs e.g. 50
+
+Training options:
+  --lr=<lr>             Learning rate for nn.optim.Adam optimizer [default: 0.00001]
+  --weight-decay=<wd>   Weight decay for nn.optim.Adam optimizer [default: 0.01]
+  --device=<device>     Device to run code ('cpu' or 'cuda') - if not provided,
+                        it will be set to the value returned by torch.cuda.is_available()
+```
 
 To train CNNs, run:
 
 ```terminal
-$ export PYTHONPATH=$PYTHONPATH:`pwd`
-
-$ python -u src/train_cnn_models.py MRNet-v1.0 axial 10 0.00001 0.01
+$ python -u src/train_cnn_models.py MRNet-v1.0 axial 10
 Parsing arguments...
 Creating data loaders...
 Creating models...
@@ -109,10 +120,22 @@ A checkpoint `mrnet_{plane}_{diagnosis}_{epoch}**.pt` is saved whenever the lowe
 
 For a given diagnosis, predictions from 3 series per exam are combined using [logistic regression](https://journals.plos.org/plosmedicine/article/figure?id=10.1371/journal.pmed.1002699.g004) to weight them accordingly and generate a single output for each exam in the training set.
 
-`src/train_lr_models.py` expects below parameters:
+```terminal
+$ python src/train_lr_models.py -h
+Trains logistic regression models for abnormalities, ACL tears and meniscal
+tears, by combine predictions from CNN models.
 
-- `<data_dir>`: directory where the data lives
-- `<models_dir>`: directory where CNN models are saved
+Usage:
+  train_lr_models.py <data_dir> <models_dir>
+  train_lr_models.py (-h | --help)
+
+General options:
+  -h --help         Show this screen.
+
+Arguments:
+  <data_dir>        Path to a directory where the data lives e.g. 'MRNet-v1.0'
+  <models_dir>      Directory where CNN models are saved e.g. 'models/2019-06-24_04-18'
+```
 
 To train logistic regression models, run:
 
@@ -139,19 +162,39 @@ We have trained 9 CNNs and 3 logistic regrssion models. Let's evaluate them.
 
 First we need to obtain model predictions on the validation dataset.
 
-`src/predict.py` expects below parameters:
+```terminal
+$ python src/predict.py -h
+Calculates predictions on the validation dataset, using CNN models specified
+in src/cnn_models_paths.txt and logistic regression models specified in
+src/lr_models_paths.txt
 
-- `<paths_csv>`: `csv` file listing paths - case ids (sagittal, coronal and axial) in an ascending order. An example file is provided as `valid-paths.csv` in the root of the project.
-- `<output_path>`: directory where predictions are saved as a 3-column `csv` file (with no header), where each column contains a prediction for abnormality, ACL tear, and meniscal tear, in that order.
+Usage:
+  predict.py <valid_paths_csv> <output_dir>
+  predict.py (-h | --help)
+
+General options:
+  -h --help          Show this screen.
+
+Arguments:
+  <valid_paths_csv>  csv file listing paths to validation set, which needs to
+                     be in a specific order - an example is provided as
+                     valid-paths.csv in the root of the project
+                     e.g. 'valid-paths.csv'
+  <output_dir>       Directory where predictions are saved as a 3-column csv
+                     file (with no header), where each column contains a
+                     prediction for abnormality, ACL tear, and meniscal tear,
+                     in that order
+                     e.g. 'out_dir'
+```
 
 To train generate predictions on the `valid` dataset, run:
 
 ```terminal
-$ python -u src/predict.py valid-paths.csv path/to/models
-Loading CNN models listed in src/mrnet_paths.txt...
-Loading logistic regression models listed in src/lr_paths.txt...
+$ python -u src/predict.py valid-paths.csv output/dir
+Loading CNN models listed in src/cnn_models_paths.txt...
+Loading logistic regression models listed in src/lr_models_paths.txt...
 Generating predictions per case...
-Predictions will be saved to path/to/models/predictions.csv
+Predictions will be saved as output/dir/predictions.csv
 ```
 
 The output should look like this (mock data):
@@ -168,21 +211,38 @@ The output should look like this (mock data):
 
 Finally, let's calculate the average AUC of the abnormality detection, ACL tear, and Meniscal tear tasks, which is the metrics reported on the [leaderboard](https://stanfordmlgroup.github.io/competitions/mrnet/).
 
-`src/evaluate.py` expects below parameters:
+```terminal
+$ python src/evaluate.py -h
+Calculates the average AUC score of the abnormality detection, ACL tear and
+Meniscal tear tasks.
 
-- `<paths_csv>`: same file used with `src/predict.py` (see above)
-- `<predictions_csv>`: a `csv` file generated by `src/predict.py` (see above)
-- `<labels_csv>`: labels for the `valid` dataset
+Usage:
+  evaluate.py <valid_paths_csv> <preds_csv> <valid_labels_csv>
+  evaluate.py (-h | --help)
+
+General options:
+  -h --help          Show this screen.
+
+Arguments:
+  <valid_paths_csv>    csv file listing paths to validation set, which needs to
+                       be in a specific order - an example is provided as
+                       valid-paths.csv in the root of the project
+                       e.g. 'valid-paths.csv'
+  <preds_csv>          csv file generated by src/predict.py
+                       e.g. 'out_dir/predictions.csv'
+  <valid_labels_csv>   csv file containing labels for the valid dataset
+                       e.g. 'MRNet-v1.0/valid_labels.csv'
+```
 
 To calculate AUC scores, run:
 
 ```terminal
 $ python -u src/evaluate.py valid-paths.csv path/to/predictions.csv MRNet-v1.0/valid_labels.csv
 Reporting AUC scores...
-    abnormal: 0.930
-    acl: 0.865
-    meniscus: 0.749
-    mean: 0.848
+  abnormal: 0.930
+  acl: 0.865
+  meniscus: 0.749
+  average: 0.848
 ```
 
 And there you have it!

@@ -1,8 +1,23 @@
 #!/usr/bin/env python
+"""Trains logistic regression models for abnormalities, ACL tears and meniscal
+tears, by combine predictions from CNN models.
+
+Usage:
+  train_lr_models.py <data_dir> <models_dir>
+  train_lr_models.py (-h | --help)
+
+General options:
+  -h --help         Show this screen.
+
+Arguments:
+  <data_dir>        Path to a directory where the data lives e.g. 'MRNet-v1.0'
+  <models_dir>      Directory where CNN models are saved e.g. 'models/2019-06-24_04-18'
+"""
 
 import sys
 from glob import glob
 from tqdm import tqdm
+from docopt import docopt
 
 import torch
 import numpy as np
@@ -85,8 +100,9 @@ def main(data_dir, models_dir):
 
 
 if __name__ == '__main__':
-    print('Parsing arguments...')
-    data_dir = sys.argv[1]
-    models_dir = sys.argv[2]
+    arguments = docopt(__doc__)
 
-    main(data_dir, models_dir)
+    print('Parsing arguments...')
+
+    main(arguments['<data_dir>'],
+         arguments['<models_dir>'])

@@ -1,17 +1,24 @@
 #!/usr/bin/env python
-"""Train a CNN to predict abnormalities, ACL tears and meniscal tears
-for a given plane (axial, coronal or sagittal) of images.
+"""Trains three CNN models to predict abnormalities, ACL tears and meniscal
+tears for a given plane (axial, coronal or sagittal) of knee MRI images.
 
 Usage:
-  ./tran.py [options] <csv_file>...
-  ./evaluate.py (-h | --help)
-  ./evaluate.py --version
+  train_cnn_models.py <data_dir> <plane> <epochs> [options]
+  train_cnn_models.py (-h | --help)
 
 General options:
+  -h --help             Show this screen.
 
-  -h --help                              Show this screen.
-  --version                              Show version.
-  --threshold=<threshold>                Threshold for recognition [default: -1].
+Arguments:
+  <data_dir>            Path to a directory where the data lives e.g. 'MRNet-v1.0'
+  <plane>               MRI plane of choice ('axial', 'coronal', 'sagittal')
+  <epochs>              Number of epochs e.g. 50
+
+Training options:
+  --lr=<lr>             Learning rate for nn.optim.Adam optimizer [default: 0.00001]
+  --weight-decay=<wd>   Weight decay for nn.optim.Adam optimizer [default: 0.01]
+  --device=<device>     Device to run code ('cpu' or 'cuda') - if not provided,
+                        it will be set to the value returned by torch.cuda.is_available()
 """
 
 import sys
@@ -186,16 +193,13 @@ def main(data_dir, plane, epochs, lr, weight_decay, device=None):
 
 
 if __name__ == '__main__':
+    arguments = docopt(__doc__)
+
     print('Parsing arguments...')
-    data_dir = sys.argv[1]
-    plane = sys.argv[2]
-    epochs = int(sys.argv[3])
-    lr = float(sys.argv[4])
-    weight_decay = float(sys.argv[5])
 
-    try:
-        device = sys.argv[6]
-    except IndexError:
-        device = None
-
-    main(data_dir, plane, epochs, lr, weight_decay, device)
+    main(arguments['<data_dir>'],
+         arguments['<plane>'],
+         int(arguments['<epochs>']),
+         float(arguments['--lr']),
+         float(arguments['--weight-decay']),
+         arguments['--device'])
