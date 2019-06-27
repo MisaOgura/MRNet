@@ -224,7 +224,7 @@ path/to/models/cnn_axial_meniscus_{epoch:02d}.pt
 ```
 
 ```terminal
-$ cat src/ls_models_paths.txt
+$ cat src/lr_models_paths.txt
 path/to/models/lr_abnormal.pkl
 path/to/models/lr_acl.pkl
 path/to/models/lr_meniscus.pkl
