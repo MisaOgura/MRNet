@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Calculates predictions on the validation dataset, using CNN models specified
 in src/cnn_models_paths.txt and logistic regression models specified in
-src/lr_models_paths.txt
+src/lr_models_paths.txt.
 
 Usage:
   predict.py <valid_paths_csv> <output_dir>

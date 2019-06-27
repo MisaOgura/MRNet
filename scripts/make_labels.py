@@ -1,11 +1,25 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
+"""Merges csv files for each diagnosis provided in the original dataset into
+one csv per train/valid dataset.
+
+Usage:
+  make_labels.py <data_dir>
+  make_labels.py (-h | --help)
+
+General options:
+  -h --help          Show this screen.
+
+Arguments:
+  <data_dir>         Path to a directory where the data lives e.g. 'MRNet-v1.0'
+"""
 
 import sys
 import pandas as pd
 import numpy as np
+from docopt import docopt
 
 
-def load_csv(data_type, condition):
+def load_csv(data_dir, data_type, condition):
     csv_path = f'{data_dir}/{data_type}-{condition}.csv'
     return pd.read_csv(csv_path,
                        header=None,
@@ -13,16 +27,16 @@ def load_csv(data_type, condition):
                        dtype={'case': str, f'{condition}': np.int64})
 
 def main(data_dir):
-    train_abnormal_df = load_csv('train', 'abnormal')
-    train_acl_df = load_csv('train', 'acl')
-    train_meniscus_df = load_csv('train', 'meniscus')
+    train_abnormal_df = load_csv(data_dir, 'train', 'abnormal')
+    train_acl_df = load_csv(data_dir, 'train', 'acl')
+    train_meniscus_df = load_csv(data_dir, 'train', 'meniscus')
 
     train_df = pd.merge(train_abnormal_df, train_acl_df, on='case') \
                  .merge(train_meniscus_df, on='case')
 
-    valid_abnormal_df = load_csv('valid', 'abnormal')
-    valid_acl_df = load_csv('valid', 'acl')
-    valid_meniscus_df = load_csv('valid', 'meniscus')
+    valid_abnormal_df = load_csv(data_dir, 'valid', 'abnormal')
+    valid_acl_df = load_csv(data_dir, 'valid', 'acl')
+    valid_meniscus_df = load_csv(data_dir, 'valid', 'meniscus')
 
     valid_df = pd.merge(valid_abnormal_df, valid_acl_df, on='case') \
                  .merge(valid_meniscus_df, on='case')
@@ -34,11 +48,8 @@ def main(data_dir):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print('Usage: python3 make_labels.py <data_dir>')
-        print('e.g. python3 make_labels.py MRNet-v1.0')
-        exit(1)
+    arguments = docopt(__doc__)
 
-    data_dir = sys.argv[1]
+    print('Parsing arguments...')
 
-    main(data_dir)
+    main(arguments['<data_dir>'])

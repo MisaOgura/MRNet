@@ -55,8 +55,24 @@ README.md  notebooks/  scripts/  src/
 Diagnoses (`0` for negative, `1` for positive) of each condition per case are provided as three separate `csv` files. It would be handy to have all the diagnoses per case in one place, so we will merge the three dataframes and save it as one `csv` file.
 
 ```terminal
-$ python scripts/make_labels.py MRNet-v1.0
-...
+$ python scripts/make_labels.py -h
+Merges csv files for each diagnosis provided in the original dataset into
+one csv per train/valid dataset.
+
+Usage:
+  make_labels.py <data_dir>
+  make_labels.py (-h | --help)
+
+General options:
+  -h --help          Show this screen.
+
+Arguments:
+  <data_dir>         Path to a directory where the data lives e.g. 'MRNet-v1.0'
+```
+
+```terminal
+$ python -u scripts/make_labels.py MRNet-v1.0
+Parsing arguments...
 Created 'train_labels.csv' and 'valid_labels.csv' in MRNet-v1.0
 ```
 
