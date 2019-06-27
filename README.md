@@ -128,9 +128,9 @@ Min valid loss for meniscus, saving the checkpoint...
 ...
 ```
 
-It create a directory for each experiment, named with a timestamp (format: `f'{datetime.now():%Y-%m-%d_%H-%M}'`), where all the output will be saved.
+It create a directory for each experiment, named with a timestamp `{datetime.now():%Y-%m-%d_%H-%M}`, e.g. `2019-06-25_12-37` where all the output will be stored.
 
-A checkpoint `mrnet_{plane}_{diagnosis}_{epoch}**.pt` is saved whenever the loweset validation loss is achieved for a particular diagnosis. The training and validation losses are also saved as `losses_{plane}.csv`.
+A checkpoint `cnn_{plane}_{diagnosis}_{epoch:02d}.pt` is saved whenever the loweset validation loss is achieved for a particular diagnosis. The training and validation losses are also saved as `losses_{plane}.csv`.
 
 #### 4.2. Train logistic regression models
 
@@ -158,7 +158,7 @@ To train logistic regression models, run:
 ```terminal
 $ python -u src/train_lr_models.py MRNet-v1.0 path/to/models
 Parsing arguments...
-Loading CNN best models from models/2019-06-24_04-18...
+Loading CNN best models from path/to/models...
 Creating data loaders...
 Collecting predictions on train dataset from the models...
 Training logistic regression models for each condition...
@@ -167,6 +167,8 @@ Cross validation score for acl: 0.649
 Cross validation score for meniscus: 0.689
 Logistic regression models saved to path/to/models
 ```
+
+Note that the code will look for the **best CNN checkpoints** saved in the `models_dir` by sorting each model and taking the *last one*. This is because in `src/train_cnn_models.py`, checkpoints are saved in a format `cnn_{plane}_{diagnosis}_{epoch:02d}.pt` every time the minimum validation loss is achieved. Hence the one with the **largest epoch value** per model is considered the best.
 
 You will now have `lr_{diagnosis}.pkl` models saved to `path/to/models` directory, along with the checkpoints and losses.
 
@@ -203,7 +205,32 @@ Arguments:
                      e.g. 'out_dir'
 ```
 
-To train generate predictions on the `valid` dataset, run:
+We need to create `src/cnn_models_paths.txt` and `src/lr_models_paths.txt` to point
+the programme to the right models. This is so that it is easier to test different combinations of models, when you have many models developed in separate experiments.
+
+Models need to be listed in a specific order:
+
+```terminal
+$ cat src/cnn_models_paths.txt
+path/to/models/cnn_sagittal_abnormal_{epoch:02d}.pt
+path/to/models/cnn_coronal_abnormal_{epoch:02d}.pt
+path/to/models/cnn_axial_abnormal_{epoch:02d}.pt
+path/to/models/cnn_sagittal_acl_{epoch:02d}.pt
+path/to/models/cnn_coronal_acl_{epoch:02d}.pt
+path/to/models/cnn_axial_acl_{epoch:02d}.pt
+path/to/models/cnn_sagittal_meniscus_{epoch:02d}.pt
+path/to/models/cnn_coronal_meniscus_{epoch:02d}.pt
+path/to/models/cnn_axial_meniscus_{epoch:02d}.pt
+```
+
+```terminal
+$ cat src/ls_models_paths.txt
+path/to/models/lr_abnormal.pkl
+path/to/models/lr_acl.pkl
+path/to/models/lr_meniscus.pkl
+```
+
+Once we create these 2 files, we're ready to proceed. To generate predictions on the `valid` dataset, run:
 
 ```terminal
 $ python -u src/predict.py valid-paths.csv output/dir
