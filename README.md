@@ -265,7 +265,9 @@ And there you have it!
 
 ### 6. Submitting the model for official evaluation
 
-WIP
+Once you have your model, you can submit it for an official evaluation by following the [tutorial](https://worksheets.codalab.org/worksheets/0xcaf785cb84564239b240400fbea93ec5/) provided by the authors.
+
+According to them it takes around 2 weeks for the score to appear on the leaderboard
 
 ## Background
 
