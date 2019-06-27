@@ -1,9 +1,0 @@
-src/models/mrnet_sagittal_abnormal_10.pt
-src/models/mrnet_coronal_abnormal_12.pt
-src/models/mrnet_axial_abnormal_17.pt
-src/models/mrnet_sagittal_acl_11.pt
-src/models/mrnet_coronal_acl_29.pt
-src/models/mrnet_axial_acl_19.pt
-src/models/mrnet_sagittal_meniscus_11.pt
-src/models/mrnet_coronal_meniscus_18.pt
-src/models/mrnet_axial_meniscus_08.pt

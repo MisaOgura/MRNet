@@ -6,3 +6,4 @@ models
 __pycache__
 *.zip
 *.csv
+*_paths.txt

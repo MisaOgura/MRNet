@@ -1,3 +1,0 @@
-src/models/lr_abnormal.pkl
-src/models/lr_acl.pkl
-src/models/lr_meniscus.pkl
