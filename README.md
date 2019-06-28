@@ -1,21 +1,12 @@
 # MRNet
 
-Code implementation of the paper [Deep-learning-assisted diagnosis for knee magnetic resonance imaging: Development and retrospective validation of MRNet](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699), the [Stanford ML Group](https://stanfordmlgroup.github.io/).
+PyTorch implementation of the paper [Deep-learning-assisted diagnosis for knee magnetic resonance imaging: Development and retrospective validation of MRNet](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699), published by the [Stanford ML Group](https://stanfordmlgroup.github.io/).
 
-It is developed for participating in the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/).
-
-For more info, see [Background](#background) section.
+It is developed for participating in the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/). For more info, see [Background](#background) section.
 
 ## TL;DR - Quickstart
 
-The code is developed primarily with:
-
-- `Python 3.6.8`
-- `PyTorch 1.1.0`
-- `torchvision 0.3.0`
-- `scikit-learn 0.21.2`
-
-### 1. Clone the repo
+### 0. Clone the repo
 
 ```terminal
 $ git clone git@github.com:MisaOgura/MRNet.git
@@ -28,6 +19,32 @@ $ cd MRNet
 $ ls
 README.md  notebooks/  scripts/  src/
 ```
+
+### 1. Create an environment
+
+The below is an example using `conda 4.7+`. You can use `virtualenv` or equivalent if you wish.
+
+#### 1.1. Make sure your Anaconda distribution is `Python 3.6+`
+
+Please refer to the official [distribution](https://www.anaconda.com/distribution/) page, as well as the [updating or upgrading Python](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-python.html#updating-or-upgrading-python) section of the doc for details.
+
+#### 1.2. Create a conda environment using `environment.yml`
+
+```terminal
+$ conda env create -f environment.yml
+...
+# To activate this environment, use
+#
+#     $ conda activate mrnet
+#
+# To deactivate an active environment, use
+#
+#     $ conda deactivate
+
+$ conda activate mrnet
+```
+
+The `mrnet` environment should have everything you need to run the code.
 
 ### 2. Download data
 
