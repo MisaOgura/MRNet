@@ -1,17 +1,14 @@
 import os
-import torch
-import numpy as np
-import pandas as pd
-
 from glob import glob
 from PIL import Image
 
+import torch
+import numpy as np
+import pandas as pd
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-MAX_PIXEL_VAL = 255
-MEAN = 58.09
-STD = 49.73
+from utils import preprocess_data
 
 
 class MRNetDataset(Dataset):
@@ -29,22 +26,9 @@ class MRNetDataset(Dataset):
 
     def __getitem__(self, idx):
         case_path = self.case_paths[idx]
+        series = preprocess_data(case_path, self.transform)
+
         case_id = int(os.path.splitext(os.path.basename(case_path))[0])
-
-        series = np.load(case_path).astype(np.float32)
-        series = torch.tensor(np.stack((series,)*3, axis=1))
-
-        # Apply transform
-        if self.transform is not None:
-            for i, slice in enumerate(series.split(1)):
-                series[i] = self.transform(slice.squeeze())
-
-        # Standardise
-        series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
-
-        # Normalise
-        series = (series - MEAN) / STD
-
         case_row = self.labels_df[self.labels_df.case == case_id]
         diagnoses = case_row.values[0,1:].astype(np.float32)
         labels = torch.tensor(diagnoses)

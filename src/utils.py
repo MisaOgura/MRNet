@@ -3,8 +3,25 @@ import csv
 
 import numpy as np
 import torch
-
 from sklearn import metrics
+
+MAX_PIXEL_VAL = 255
+MEAN = 58.09
+STD = 49.73
+
+
+def preprocess_data(case_path, transform=None):
+    series =np.load(case_path).astype(np.float32)
+    series = torch.tensor(np.stack((series,)*3, axis=1))
+
+    if transform is not None:
+        for i, slice in enumerate(series.split(1)):
+            series[i] = transform(slice.squeeze())
+
+    series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
+    series = (series - MEAN) / STD
+
+    return series
 
 
 def create_output_dir(exp, plane):

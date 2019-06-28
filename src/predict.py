@@ -36,10 +36,7 @@ import joblib
 from torchvision import transforms
 
 from model import MRNet
-
-MAX_PIXEL_VAL = 255
-MEAN = 58.09
-STD = 49.73
+from utils import preprocess_data
 
 
 def main(valid_paths_csv, output_dir):
@@ -102,20 +99,10 @@ def main(valid_paths_csv, output_dir):
     for i in tqdm(range(0, len(npy_paths), 3)):
         case_paths = [npy_paths[i], npy_paths[i+1], npy_paths[i+2]]
 
-        # Convert npy series to rgb, then to torch tensor
-
         data = []
 
         for case_path in case_paths:
-            series = np.load(case_path).astype(np.float32)
-            series = torch.tensor(np.stack((series,)*3, axis=1))
-
-            for i, slice in enumerate(series.split(1)):
-                series[i] = transform(slice.squeeze())
-
-            series = (series - series.min()) / (series.max() - series.min()) * MAX_PIXEL_VAL
-            series = (series - MEAN) / STD
-
+            series = preprocess_data(case_path, transform)
             data.append(series.unsqueeze(0).to(device))
 
         # Make predictions per case
