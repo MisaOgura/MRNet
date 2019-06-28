@@ -41,7 +41,7 @@ $ conda env create -f environment.yml
 $ conda activate mrnet
 ```
 
-The `mrnet` environment should have everything you need to run the code.
+Don't forget to activate it! The `mrnet` environment should have everything you need to run the code.
 
 ### 2. Download data
 
