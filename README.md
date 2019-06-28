@@ -17,31 +17,25 @@ Resolving deltas: 100% (243/243), done.
 $ cd MRNet
 ```
 
-### 1. Create an environment
+### 1. Setup an environment
 
-The below is an example using `conda 4.7+`. You can use `virtualenv` or equivalent if you wish.
+The code is developed with `Python 3.6.8`.
 
-#### 1.1. Make sure your Anaconda distribution is `Python 3.6+`
+The packages directly required are:
 
-Please refer to the official [distribution](https://www.anaconda.com/distribution/) page, as well as the [updating or upgrading Python](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-python.html#updating-or-upgrading-python) section of the doc for details.
-
-#### 1.2. Create a conda environment using `environment.yml`
-
-```terminal
-$ conda env create -f environment.yml
-...
-# To activate this environment, use
-#
-#     $ conda activate mrnet
-#
-# To deactivate an active environment, use
-#
-#     $ conda deactivate
-
-$ conda activate mrnet
+```txt
+docopt==0.6.2
+joblib==0.13.2
+numpy==1.16.4
+pandas==0.24.2
+Pillow==6.0.0
+scikit-learn==0.21.2
+torch==1.1.0
+torchvision==0.3.0
+tqdm==4.32.1
 ```
 
-Don't forget to activate it! The `mrnet` environment should have everything you need to run the code.
+Please make sure you have these packages with same minor versions available in your environment.
 
 ### 2. Download data
 
