@@ -6,7 +6,7 @@ It is developed for participating in the [MRNet Competition](https://stanfordmlg
 
 ## TL;DR - Quickstart
 
-### 0. Clone the repo
+### 0. Clone the repo and `cd` into it
 
 ```terminal
 $ git clone git@github.com:MisaOgura/MRNet.git
@@ -15,9 +15,6 @@ Cloning into 'MRNet'...
 Resolving deltas: 100% (243/243), done.
 
 $ cd MRNet
-
-$ ls
-README.md  notebooks/  scripts/  src/
 ```
 
 ### 1. Create an environment
@@ -53,18 +50,25 @@ The `mrnet` environment should have everything you need to run the code.
 - Unzip the archive and save it to the `MRNet` project root
 
     ```terminal
-    $ unzip -qq MRNet-v1.0.zip -d path/to/MRNet
+    $ unzip -qq MRNet-v1.0.zip -d path/to/MRNet (./ if you are already in it)
 
     # Note that you will see some warnings - it seems ok to ignore it
     ```
 
-- You now should have `MRNet-v1.0` directory in the project root
+- You now should have `MRNet-v1.0` data directory in the project root
 
     ```terminal
     $ cd path/to/MRNet
 
-    $ ls
-    MRNet-v1.0/  README.md  notebooks/  scripts/  src/
+    $ tree -L 1
+    .
+    ├── LICENSE.txt
+    ├── MRNet-v1.0
+    ├── README.md
+    ├── environment.yml
+    ├── notebooks
+    ├── scripts
+    └── src
     ```
 
 ### 3. Merge diagnoses to make labels
