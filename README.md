@@ -1,8 +1,16 @@
 # MRNet
 
+[![DOI](https://zenodo.org/badge/192375650.svg)](https://zenodo.org/badge/latestdoi/192375650)
+
 PyTorch implementation of the paper [Deep-learning-assisted diagnosis for knee magnetic resonance imaging: Development and retrospective validation of MRNet](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1002699), published by the [Stanford ML Group](https://stanfordmlgroup.github.io/).
 
 It is developed for participating in the [MRNet Competition](https://stanfordmlgroup.github.io/competitions/mrnet/). For more info, see [Background](#background) section.
+
+## Citation
+
+```txt
+Misa Ogura. (2019, July 1). MisaOgura/MRNet: MRNet baseline model (Version 0.0.1). Zenodo. http://doi.org/10.5281/zenodo.3264923
+```
 
 ## TL;DR - Quickstart
 
