@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 """Trains three CNN models to predict abnormalities, ACL tears and meniscal
 tears for a given plane (axial, coronal or sagittal) of knee MRI images.
 

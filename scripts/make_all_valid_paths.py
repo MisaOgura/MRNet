@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 """Creates a csv containing paths for the validation dataset - to be used as an
 argument to src/predict.py.
 

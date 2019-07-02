@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 """Trains logistic regression models for abnormalities, ACL tears and meniscal
 tears, by combine predictions from CNN models.
 

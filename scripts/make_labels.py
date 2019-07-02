@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.6
 """Merges csv files for each diagnosis provided in the original dataset into
 one csv per train/valid dataset.
 
